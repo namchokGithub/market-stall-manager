@@ -9,7 +9,7 @@ const NEW_STALL_SIZE = { width: 120, height: 100 }
 const NEW_STALL_ANCHOR = { x: 40, y: 460 }
 
 export function MarketMapPage() {
-  const [savedLayout, _setSavedLayout] = useState<Stall[]>(mockStalls)
+  const [savedLayout, setSavedLayout] = useState<Stall[]>(mockStalls)
   const [mode, setMode] = useState<'view' | 'edit'>('view')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoomPercent, setZoomPercent] = useState(100)
@@ -48,6 +48,18 @@ export function MarketMapPage() {
     history.commit(draftLayout.map((s) => (s.id === id ? { ...s, x, y } : s)))
   }
 
+  const handleSave = () => {
+    setSavedLayout(draftLayout)
+    console.log(JSON.stringify(draftLayout, null, 2))
+    setSelectedId(null)
+    setMode('view')
+  }
+
+  const handleCancel = () => {
+    setSelectedId(null)
+    setMode('view')
+  }
+
   return (
     <div className="flex h-screen w-screen flex-col">
       <Toolbar
@@ -64,6 +76,8 @@ export function MarketMapPage() {
         onZoomOut={() => canvasRef.current?.zoomOut()}
         onZoomIn={() => canvasRef.current?.zoomIn()}
         onResetView={() => canvasRef.current?.resetView()}
+        onSave={handleSave}
+        onCancel={handleCancel}
       />
       <div className="flex-1">
         <MapCanvas

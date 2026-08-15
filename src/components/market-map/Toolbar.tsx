@@ -1,4 +1,16 @@
-import { Eye, Pencil, Undo2, Redo2, Plus, Trash2, ZoomOut, ZoomIn, Maximize } from 'lucide-react'
+import {
+  Eye,
+  Pencil,
+  Undo2,
+  Redo2,
+  Plus,
+  Trash2,
+  ZoomOut,
+  ZoomIn,
+  Maximize,
+  Save,
+  X,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export interface ToolbarProps {
@@ -15,6 +27,8 @@ export interface ToolbarProps {
   onZoomOut: () => void
   onZoomIn: () => void
   onResetView: () => void
+  onSave: () => void
+  onCancel: () => void
 }
 
 export function Toolbar({
@@ -31,6 +45,8 @@ export function Toolbar({
   onZoomOut,
   onZoomIn,
   onResetView,
+  onSave,
+  onCancel,
 }: ToolbarProps) {
   const isEdit = mode === 'edit'
 
@@ -74,6 +90,17 @@ export function Toolbar({
       </Button>
       <Button variant="ghost" size="icon" onClick={onResetView} aria-label="Reset view">
         <Maximize className="h-4 w-4" />
+      </Button>
+
+      <div className="mx-2 h-6 w-px bg-slate-200" />
+
+      <Button variant="default" size="sm" disabled={!isEdit} onClick={onSave}>
+        <Save className="mr-1 h-4 w-4" />
+        Save
+      </Button>
+      <Button variant="outline" size="sm" disabled={!isEdit} onClick={onCancel}>
+        <X className="mr-1 h-4 w-4" />
+        Cancel
       </Button>
     </div>
   )
