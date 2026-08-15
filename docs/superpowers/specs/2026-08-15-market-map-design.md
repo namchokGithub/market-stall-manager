@@ -32,7 +32,7 @@ explicitly out of scope and will be separate future sub-projects.
 ```ts
 interface Stall {
   id: string;
-  code: string;   // e.g. "A01", "A02", "B01"
+  code: string; // e.g. "A01", "A02", "B01"
   x: number;
   y: number;
   width: number;
@@ -81,6 +81,7 @@ delete stall, stall drag-end (not on every drag-move frame, and not on
 pan/zoom/select).
 
 Transitions:
+
 - **Enter Edit Mode** (toggle button, only available in View Mode):
   `draftLayout = deepClone(savedLayout)`, history reset (empty past/
   future, present = draftLayout). `mode = 'edit'`.
