@@ -19,6 +19,11 @@ export function StallShape({
   onDragStart,
   onDragEnd,
 }: StallShapeProps) {
+  const handleDragStart = (e: KonvaEventObject<DragEvent>) => {
+    e.target.moveToTop()
+    onDragStart()
+  }
+
   const handleDragEnd = (e: KonvaEventObject<DragEvent>) => {
     onDragEnd(e.target.x(), e.target.y())
   }
@@ -30,7 +35,7 @@ export function StallShape({
       draggable={draggable}
       onClick={onSelect}
       onTap={onSelect}
-      onDragStart={onDragStart}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <Rect

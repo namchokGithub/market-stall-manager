@@ -33,7 +33,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   const [size, setSize] = useState({ width: 0, height: 0 })
   const [scale, setScale] = useState(1)
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 })
-  const [draggingStallId, setDraggingStallId] = useState<string | null>(null)
+  const [isDraggingStall, setIsDraggingStall] = useState(false)
 
   useEffect(() => {
     const el = containerRef.current
@@ -87,8 +87,6 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
     setStagePos({ x: e.target.x(), y: e.target.y() })
   }
 
-  const draggingStall = stalls.find((s) => s.id === draggingStallId) ?? null
-
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-100">
       <Stage
@@ -99,7 +97,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
         scaleY={scale}
         x={stagePos.x}
         y={stagePos.y}
-        draggable={draggingStallId === null}
+        draggable={!isDraggingStall}
         onWheel={handleWheel}
         onDragEnd={handleStageDragEnd}
         onClick={(e) => {
@@ -107,37 +105,20 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
         }}
       >
         <Layer>
-          {stalls
-            .filter((s) => s.id !== draggingStallId)
-            .map((stall) => (
-              <StallShape
-                key={stall.id}
-                stall={stall}
-                selected={stall.id === selectedId}
-                draggable={editable}
-                onSelect={() => onSelect(stall.id)}
-                onDragStart={() => setDraggingStallId(stall.id)}
-                onDragEnd={(x, y) => {
-                  setDraggingStallId(null)
-                  onStallDragEnd(stall.id, x, y)
-                }}
-              />
-            ))}
-        </Layer>
-        <Layer>
-          {draggingStall && (
+          {stalls.map((stall) => (
             <StallShape
-              stall={draggingStall}
-              selected={draggingStall.id === selectedId}
+              key={stall.id}
+              stall={stall}
+              selected={stall.id === selectedId}
               draggable={editable}
-              onSelect={() => onSelect(draggingStall.id)}
-              onDragStart={() => setDraggingStallId(draggingStall.id)}
+              onSelect={() => onSelect(stall.id)}
+              onDragStart={() => setIsDraggingStall(true)}
               onDragEnd={(x, y) => {
-                setDraggingStallId(null)
-                onStallDragEnd(draggingStall.id, x, y)
+                setIsDraggingStall(false)
+                onStallDragEnd(stall.id, x, y)
               }}
             />
-          )}
+          ))}
         </Layer>
       </Stage>
     </div>
