@@ -1,4 +1,7 @@
 import type { Stall } from '../types/stall'
+import type { MarketLayout } from '../types/market'
+
+export const DEFAULT_MARKET: MarketLayout = { width: 1200, height: 800 }
 
 export const ROW_CAPACITY = 6
 

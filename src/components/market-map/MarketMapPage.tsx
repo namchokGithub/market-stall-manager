@@ -2,55 +2,79 @@ import { useRef, useState } from 'react'
 import { MapCanvas, type MapCanvasHandle } from './MapCanvas'
 import { Toolbar } from './Toolbar'
 import { useMapHistory } from '../../state/useMapHistory'
-import { mockStalls, nextStallCode } from '../../data/mockStalls'
+import { DEFAULT_MARKET, mockStalls, nextStallCode } from '../../data/mockStalls'
 import type { Stall } from '../../types/stall'
+import type { MarketLayout } from '../../types/market'
+
+interface MapState {
+  market: MarketLayout
+  stalls: Stall[]
+}
 
 const NEW_STALL_SIZE = { width: 120, height: 100 }
 const NEW_STALL_ANCHOR = { x: 40, y: 460 }
 
+function clampAnchor(anchor: { x: number; y: number }, size: { width: number; height: number }, market: MarketLayout) {
+  return {
+    x: Math.min(Math.max(anchor.x, 0), Math.max(market.width - size.width, 0)),
+    y: Math.min(Math.max(anchor.y, 0), Math.max(market.height - size.height, 0)),
+  }
+}
+
 export function MarketMapPage() {
-  const [savedLayout, setSavedLayout] = useState<Stall[]>(mockStalls)
+  const [savedState, setSavedState] = useState<MapState>({ market: DEFAULT_MARKET, stalls: mockStalls })
   const [mode, setMode] = useState<'view' | 'edit'>('view')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoomPercent, setZoomPercent] = useState(100)
-  const history = useMapHistory(savedLayout)
+  const history = useMapHistory<MapState>(savedState)
   const canvasRef = useRef<MapCanvasHandle>(null)
 
-  const draftLayout = history.present
-  const stalls = mode === 'edit' ? draftLayout : savedLayout
+  const draftState = history.present
+  const { market, stalls } = mode === 'edit' ? draftState : savedState
 
   const handleEnterEdit = () => {
-    history.reset(savedLayout)
+    history.reset(savedState)
     setSelectedId(null)
     setMode('edit')
   }
 
   const handleAddStall = () => {
-    const code = nextStallCode(draftLayout)
+    const code = nextStallCode(draftState.stalls)
+    const anchor = clampAnchor(NEW_STALL_ANCHOR, NEW_STALL_SIZE, draftState.market)
     const newStall: Stall = {
       id: code.toLowerCase(),
       code,
-      x: NEW_STALL_ANCHOR.x,
-      y: NEW_STALL_ANCHOR.y,
+      x: anchor.x,
+      y: anchor.y,
       ...NEW_STALL_SIZE,
     }
-    history.commit([...draftLayout, newStall])
+    history.commit({ market: draftState.market, stalls: [...draftState.stalls, newStall] })
     setSelectedId(newStall.id)
   }
 
   const handleDeleteStall = () => {
     if (!selectedId) return
-    history.commit(draftLayout.filter((s) => s.id !== selectedId))
+    history.commit({
+      market: draftState.market,
+      stalls: draftState.stalls.filter((s) => s.id !== selectedId),
+    })
     setSelectedId(null)
   }
 
   const handleStallDragEnd = (id: string, x: number, y: number) => {
-    history.commit(draftLayout.map((s) => (s.id === id ? { ...s, x, y } : s)))
+    history.commit({
+      market: draftState.market,
+      stalls: draftState.stalls.map((s) => (s.id === id ? { ...s, x, y } : s)),
+    })
+  }
+
+  const handleMarketResize = (nextMarket: MarketLayout) => {
+    history.commit({ market: nextMarket, stalls: draftState.stalls })
   }
 
   const handleSave = () => {
-    setSavedLayout(draftLayout)
-    console.log(JSON.stringify(draftLayout, null, 2))
+    setSavedState(draftState)
+    console.log(JSON.stringify({ market: draftState.market, stalls: draftState.stalls }, null, 2))
     setSelectedId(null)
     setMode('view')
   }
@@ -82,11 +106,13 @@ export function MarketMapPage() {
       <div className="flex-1">
         <MapCanvas
           ref={canvasRef}
+          market={market}
           stalls={stalls}
           editable={mode === 'edit'}
           selectedId={selectedId}
           onSelect={setSelectedId}
           onStallDragEnd={handleStallDragEnd}
+          onMarketResize={handleMarketResize}
           onScaleChange={setZoomPercent}
         />
       </div>

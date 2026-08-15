@@ -6,6 +6,7 @@ interface StallShapeProps {
   stall: Stall
   selected: boolean
   draggable: boolean
+  dragBoundFunc: (pos: { x: number; y: number }) => { x: number; y: number }
   onSelect: () => void
   onDragStart: () => void
   onDragEnd: (x: number, y: number) => void
@@ -15,6 +16,7 @@ export function StallShape({
   stall,
   selected,
   draggable,
+  dragBoundFunc,
   onSelect,
   onDragStart,
   onDragEnd,
@@ -33,6 +35,7 @@ export function StallShape({
       x={stall.x}
       y={stall.y}
       draggable={draggable}
+      dragBoundFunc={dragBoundFunc}
       onClick={onSelect}
       onTap={onSelect}
       onDragStart={handleDragStart}

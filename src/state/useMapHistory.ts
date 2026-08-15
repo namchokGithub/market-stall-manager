@@ -1,30 +1,29 @@
 import { useCallback, useState } from 'react'
-import type { Stall } from '../types/stall'
 
-interface MapHistoryState {
-  past: Stall[][]
-  present: Stall[]
-  future: Stall[][]
+interface MapHistoryState<T> {
+  past: T[]
+  present: T
+  future: T[]
 }
 
-export interface UseMapHistoryResult {
-  present: Stall[]
+export interface UseMapHistoryResult<T> {
+  present: T
   canUndo: boolean
   canRedo: boolean
-  commit: (next: Stall[]) => void
+  commit: (next: T) => void
   undo: () => void
   redo: () => void
-  reset: (next: Stall[]) => void
+  reset: (next: T) => void
 }
 
-export function useMapHistory(initial: Stall[]): UseMapHistoryResult {
-  const [state, setState] = useState<MapHistoryState>({
+export function useMapHistory<T>(initial: T): UseMapHistoryResult<T> {
+  const [state, setState] = useState<MapHistoryState<T>>({
     past: [],
     present: initial,
     future: [],
   })
 
-  const commit = useCallback((next: Stall[]) => {
+  const commit = useCallback((next: T) => {
     setState((prev) => ({ past: [...prev.past, prev.present], present: next, future: [] }))
   }, [])
 
@@ -48,7 +47,7 @@ export function useMapHistory(initial: Stall[]): UseMapHistoryResult {
     })
   }, [])
 
-  const reset = useCallback((next: Stall[]) => {
+  const reset = useCallback((next: T) => {
     setState({ past: [], present: next, future: [] })
   }, [])
 
