@@ -32,7 +32,8 @@ export const mockStalls: Stall[] = [
 export function nextStallCode(stalls: Stall[], rowCapacity: number = ROW_CAPACITY): string {
   if (stalls.length === 0) return 'A01'
   const prefixes = stalls.map((s) => s.code.charAt(0))
-  const lastPrefix = [...prefixes].sort().at(-1) as string
+  const sortedPrefixes = [...prefixes].sort()
+  const lastPrefix = sortedPrefixes[sortedPrefixes.length - 1]
   const numbersInPrefix = stalls
     .filter((s) => s.code.charAt(0) === lastPrefix)
     .map((s) => parseInt(s.code.slice(1), 10))
