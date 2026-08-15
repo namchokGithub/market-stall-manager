@@ -59,9 +59,10 @@ next stall code when adding a new stall.
 - `Toolbar.tsx` — the button row (mode toggle, undo/redo, add/delete,
   zoom controls, save/cancel), fully controlled by props.
 - `MapCanvas.tsx` — react-konva `Stage`/`Layer`: pan, zoom, select,
-  drag. Mode-agnostic (`editable: boolean`); the actively-dragged
-  stall renders on its own top `Layer` so it stays visually above the
-  rest.
+  drag. Mode-agnostic (`editable: boolean`); all stalls render on one
+  `Layer`, and the dragged node is brought to the front via Konva's
+  `moveToTop()` on `dragstart` (splitting across two `Layer`s would
+  remount the node mid-drag and fire a premature `dragend`).
 - `StallShape.tsx` — a single stall (`Rect` + code `Text`).
 
 When adding another shadcn/ui component, use `pnpm dlx shadcn@3.8.5 add <component>` to maintain Tailwind v3 compatibility, not `@latest` which requires Tailwind v4.

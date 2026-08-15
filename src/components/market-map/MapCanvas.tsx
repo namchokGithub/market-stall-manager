@@ -111,7 +111,9 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
               stall={stall}
               selected={stall.id === selectedId}
               draggable={editable}
-              onSelect={() => onSelect(stall.id)}
+              onSelect={() => {
+                if (editable) onSelect(stall.id)
+              }}
               onDragStart={() => setIsDraggingStall(true)}
               onDragEnd={(x, y) => {
                 setIsDraggingStall(false)

@@ -67,7 +67,7 @@ export function MarketMapPage() {
         zoomPercent={zoomPercent}
         canUndo={history.canUndo}
         canRedo={history.canRedo}
-        hasSelection={selectedId !== null}
+        hasSelection={stalls.some((s) => s.id === selectedId)}
         onEnterEdit={handleEnterEdit}
         onUndo={history.undo}
         onRedo={history.redo}
