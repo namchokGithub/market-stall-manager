@@ -17,6 +17,7 @@ function buildRow(prefix: string, rowIndex: number): Stall[] {
     const code = `${prefix}${String(i + 1).padStart(2, '0')}`
     return {
       id: code.toLowerCase(),
+      kind: 'stall' as const,
       code,
       x: ORIGIN_X + i * (STALL_WIDTH + GAP_X),
       y: ORIGIN_Y + rowIndex * (STALL_HEIGHT + GAP_Y),
@@ -32,7 +33,8 @@ export const mockStalls: Stall[] = [
   ...buildRow('C', 2),
 ]
 
-export function nextStallCode(stalls: Stall[], rowCapacity: number = ROW_CAPACITY): string {
+export function nextStallCode(items: Stall[], rowCapacity: number = ROW_CAPACITY): string {
+  const stalls = items.filter((s) => s.kind === 'stall')
   if (stalls.length === 0) return 'A01'
   const prefixes = stalls.map((s) => s.code.charAt(0))
   const sortedPrefixes = [...prefixes].sort()

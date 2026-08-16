@@ -11,7 +11,30 @@ const MAX_SCALE = 3
 const ZOOM_STEP = 1.1
 const MARKET_PADDING = 40
 const MIN_MARKET_SIZE = 100
+const MIN_STALL_SIZE = 40
 const HANDLE_SCREEN_SIZE = 10
+
+interface StallResizeHandle {
+  x: number
+  y: number
+  dirX: 1 | -1
+  dirY: 1 | -1
+  anchorX: number
+  anchorY: number
+}
+
+function stallResizeHandles(stall: Stall): StallResizeHandle[] {
+  const left = stall.x
+  const right = stall.x + stall.width
+  const top = stall.y
+  const bottom = stall.y + stall.height
+  return [
+    { x: left, y: top, dirX: -1, dirY: -1, anchorX: right, anchorY: bottom },
+    { x: right, y: top, dirX: 1, dirY: -1, anchorX: left, anchorY: bottom },
+    { x: left, y: bottom, dirX: -1, dirY: 1, anchorX: right, anchorY: top },
+    { x: right, y: bottom, dirX: 1, dirY: 1, anchorX: left, anchorY: top },
+  ]
+}
 
 export interface MapCanvasHandle {
   zoomIn: () => void
@@ -26,6 +49,7 @@ interface MapCanvasProps {
   selectedId: string | null
   onSelect: (id: string | null) => void
   onStallDragEnd: (id: string, x: number, y: number) => void
+  onStallResize: (id: string, next: { x: number; y: number; width: number; height: number }) => void
   onMarketResize: (nextMarket: MarketLayout) => void
   onScaleChange: (scalePercent: number) => void
 }
@@ -51,7 +75,17 @@ function computeFitTransform(containerSize: { width: number; height: number }, m
 }
 
 export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function MapCanvas(
-  { market, stalls, editable, selectedId, onSelect, onStallDragEnd, onMarketResize, onScaleChange },
+  {
+    market,
+    stalls,
+    editable,
+    selectedId,
+    onSelect,
+    onStallDragEnd,
+    onStallResize,
+    onMarketResize,
+    onScaleChange,
+  },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -61,6 +95,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 })
   const [isDraggingStall, setIsDraggingStall] = useState(false)
   const [isResizingMarket, setIsResizingMarket] = useState(false)
+  const [isResizingStall, setIsResizingStall] = useState(false)
   const [hasManualView, setHasManualView] = useState(false)
 
   useEffect(() => {
@@ -149,6 +184,26 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
     { x: market.width, y: market.height },
   ]
 
+  const selectedStall = stalls.find((s) => s.id === selectedId) ?? null
+
+  const axisBounds = (anchor: number, dir: 1 | -1, marketMax: number) =>
+    dir === 1
+      ? { min: anchor + MIN_STALL_SIZE, max: marketMax }
+      : { min: 0, max: anchor - MIN_STALL_SIZE }
+
+  const handleStallResizeDragEnd = (stall: Stall, handle: StallResizeHandle) => (
+    e: KonvaEventObject<DragEvent>,
+  ) => {
+    setIsResizingStall(false)
+    const localX = e.target.x()
+    const localY = e.target.y()
+    const nextX = handle.dirX === 1 ? handle.anchorX : localX
+    const nextWidth = handle.dirX === 1 ? localX - handle.anchorX : handle.anchorX - localX
+    const nextY = handle.dirY === 1 ? handle.anchorY : localY
+    const nextHeight = handle.dirY === 1 ? localY - handle.anchorY : handle.anchorY - localY
+    onStallResize(stall.id, { x: nextX, y: nextY, width: nextWidth, height: nextHeight })
+  }
+
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-100">
       <Stage
@@ -159,7 +214,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
         scaleY={scale}
         x={stagePos.x}
         y={stagePos.y}
-        draggable={!isDraggingStall && !isResizingMarket}
+        draggable={!isDraggingStall && !isResizingMarket && !isResizingStall}
         onWheel={handleWheel}
         onDragEnd={handleStageDragEnd}
         onClick={(e) => {
@@ -222,6 +277,33 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
                 dragBoundFunc={handleResizeDragBound}
                 onDragStart={() => setIsResizingMarket(true)}
                 onDragEnd={handleResizeDragEnd}
+              />
+            ))}
+          {editable &&
+            selectedStall &&
+            stallResizeHandles(selectedStall).map((handle, i) => (
+              <Rect
+                key={i}
+                x={handle.x}
+                y={handle.y}
+                offsetX={handleSize / 2}
+                offsetY={handleSize / 2}
+                width={handleSize}
+                height={handleSize}
+                fill="#ffffff"
+                stroke="#2563eb"
+                strokeWidth={1.5 / scale}
+                draggable
+                dragBoundFunc={(pos) => {
+                  const xBounds = axisBounds(handle.anchorX, handle.dirX, market.width)
+                  const yBounds = axisBounds(handle.anchorY, handle.dirY, market.height)
+                  return {
+                    x: clamp(pos.x, stagePos.x + xBounds.min * scale, stagePos.x + xBounds.max * scale),
+                    y: clamp(pos.y, stagePos.y + yBounds.min * scale, stagePos.y + yBounds.max * scale),
+                  }
+                }}
+                onDragStart={() => setIsResizingStall(true)}
+                onDragEnd={handleStallResizeDragEnd(selectedStall, handle)}
               />
             ))}
         </Layer>

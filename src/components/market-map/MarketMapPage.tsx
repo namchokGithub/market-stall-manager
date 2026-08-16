@@ -13,6 +13,8 @@ interface MapState {
 
 const NEW_STALL_SIZE = { width: 120, height: 100 }
 const NEW_STALL_ANCHOR = { x: 40, y: 460 }
+const NEW_BUSH_SIZE = { width: 60, height: 60 }
+const NEW_BUSH_ANCHOR = { x: 40, y: 460 }
 
 function clampAnchor(anchor: { x: number; y: number }, size: { width: number; height: number }, market: MarketLayout) {
   return {
@@ -43,6 +45,7 @@ export function MarketMapPage() {
     const anchor = clampAnchor(NEW_STALL_ANCHOR, NEW_STALL_SIZE, draftState.market)
     const newStall: Stall = {
       id: code.toLowerCase(),
+      kind: 'stall',
       code,
       x: anchor.x,
       y: anchor.y,
@@ -50,6 +53,20 @@ export function MarketMapPage() {
     }
     history.commit({ market: draftState.market, stalls: [...draftState.stalls, newStall] })
     setSelectedId(newStall.id)
+  }
+
+  const handleAddBush = () => {
+    const anchor = clampAnchor(NEW_BUSH_ANCHOR, NEW_BUSH_SIZE, draftState.market)
+    const newBush: Stall = {
+      id: `bush-${crypto.randomUUID()}`,
+      kind: 'bush',
+      code: '',
+      x: anchor.x,
+      y: anchor.y,
+      ...NEW_BUSH_SIZE,
+    }
+    history.commit({ market: draftState.market, stalls: [...draftState.stalls, newBush] })
+    setSelectedId(newBush.id)
   }
 
   const handleDeleteStall = () => {
@@ -70,6 +87,16 @@ export function MarketMapPage() {
 
   const handleMarketResize = (nextMarket: MarketLayout) => {
     history.commit({ market: nextMarket, stalls: draftState.stalls })
+  }
+
+  const handleStallResize = (
+    id: string,
+    next: { x: number; y: number; width: number; height: number },
+  ) => {
+    history.commit({
+      market: draftState.market,
+      stalls: draftState.stalls.map((s) => (s.id === id ? { ...s, ...next } : s)),
+    })
   }
 
   const handleSave = () => {
@@ -96,6 +123,7 @@ export function MarketMapPage() {
         onUndo={history.undo}
         onRedo={history.redo}
         onAddStall={handleAddStall}
+        onAddBush={handleAddBush}
         onDeleteStall={handleDeleteStall}
         onZoomOut={() => canvasRef.current?.zoomOut()}
         onZoomIn={() => canvasRef.current?.zoomIn()}
@@ -112,6 +140,7 @@ export function MarketMapPage() {
           selectedId={selectedId}
           onSelect={setSelectedId}
           onStallDragEnd={handleStallDragEnd}
+          onStallResize={handleStallResize}
           onMarketResize={handleMarketResize}
           onScaleChange={setZoomPercent}
         />

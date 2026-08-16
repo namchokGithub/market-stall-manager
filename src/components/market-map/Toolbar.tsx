@@ -4,6 +4,7 @@ import {
   Undo2,
   Redo2,
   Plus,
+  TreePine,
   Trash2,
   ZoomOut,
   ZoomIn,
@@ -23,6 +24,7 @@ export interface ToolbarProps {
   onUndo: () => void
   onRedo: () => void
   onAddStall: () => void
+  onAddBush: () => void
   onDeleteStall: () => void
   onZoomOut: () => void
   onZoomIn: () => void
@@ -41,6 +43,7 @@ export function Toolbar({
   onUndo,
   onRedo,
   onAddStall,
+  onAddBush,
   onDeleteStall,
   onZoomOut,
   onZoomIn,
@@ -68,6 +71,9 @@ export function Toolbar({
 
       <Button variant="ghost" size="icon" disabled={!isEdit} onClick={onAddStall} aria-label="Add Stall">
         <Plus className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="icon" disabled={!isEdit} onClick={onAddBush} aria-label="Add Bush">
+        <TreePine className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
