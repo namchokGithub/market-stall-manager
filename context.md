@@ -7,8 +7,10 @@ this doc is the *why*, not the *what*.
 
 ## What this project is
 
-An admin app for laying out a physical market: stalls, decorative bushes,
-a resizable market boundary, pan/zoom, undo/redo, save/cancel. No backend
+An admin app for laying out a physical market: stalls and other map elements,
+a resizable market boundary, pan/zoom, undo/redo, save/cancel. Elements use a
+single `Stall` storage shape differentiated by `ElementType`; Stall retains
+its renter/status details while other types are visual layout objects. No backend
 yet — a future iteration will add Firebase or similar; until then, "Save"
 just commits to React state and `console.log`s the JSON shape a backend
 would eventually receive.
@@ -30,8 +32,10 @@ reading the error, not by guessing:
    immediately (`CssSyntaxError`). `3.8.5` was verified (in an isolated
    scratch probe, not just read about) to generate classic
    Tailwind-v3-compatible, Radix-based output matching what's already in
-   `src/components/ui/button.tsx`. Any future `shadcn add <component>`
-   must use `pnpm dlx shadcn@3.8.5 add <component>`.
+  `src/components/ui/button.tsx`. Any future `shadcn add <component>`
+  must use `pnpm dlx shadcn@3.8.5 add <component>`.
+   `DropdownMenu` is now installed and uses Radix's
+   `@radix-ui/react-dropdown-menu`, matching this same Tailwind-v3 setup.
 
 If you ever need to add a new dependency whose default version might have
 moved on since this was written, don't assume — check the changelog or
@@ -55,7 +59,8 @@ the way both of the above were verified.
 - **One `useMapHistory<MapState>` instance covers everything.**
   `MapState = { market, stalls }`. Undo/redo, Save, and Cancel all operate
   on this single bundled snapshot — market resize, stall drag/resize/add/
-  delete, and background-image URL changes are all just different
+  delete, Text label edits, background-image URL changes, and background tint
+  changes are all just different
   `history.commit({ market, stalls })` calls. If you add a new editable
   property to the map, put it on `market` or on a `Stall`, not as separate
   React state, or it won't get undo/redo/save/cancel for free.
@@ -65,6 +70,16 @@ the way both of the above were verified.
   `MarketMapPage`. Keep it that way — it's what let the stall-detail-
   popup feature (View-Mode-only) get added without touching any of
   `MapCanvas`'s drag/resize/zoom logic.
+- **Map elements are config-driven.** `src/data/elementTypes.ts` is the
+  source of truth for each `ElementType`'s category, label, Lucide icon,
+  color, and default size. The Add Element menu and canvas rendering both
+  rely on it, so adding another box-style type starts with one config entry.
+  `StallShape.tsx` holds the raw Lucide SVG path data needed by Konva; copy
+  it from the installed `lucide-react` icon source rather than guessing.
+- **Text uses an HTML overlay, not Konva text editing.** Double-clicking a
+  Text element opens a positioned `<input>` over the canvas in `MapCanvas`.
+  Blur or Enter commits `label` via `MarketMapPage`, keeping it in the same
+  history, Save, and Cancel lifecycle. Escape dismisses without committing.
 - **The Konva drag-layering bug (fixed, but worth knowing about).** An
   earlier version tried "render the dragged stall on its own top `Layer`"
   to keep it visually on top while dragging. This broke every drag
@@ -96,6 +111,10 @@ the way both of the above were verified.
   containment instead of the current min/max rect clamp, a vertex add/
   drag/delete UI with self-intersection prevention). Don't half-do this;
   it needs its own design pass if picked up.
+- **Wall/Fence and Zone are intentionally simplified.** Wall/Fence are
+  ordinary resizable icon boxes, not lines with draggable endpoints. Zone is
+  a low-opacity resizable box with an always-visible label, not a drawn area
+  with editable fill color. The latter is the higher-priority follow-up.
 - **No persistence.** Reload the page and everything reverts to
   `mockStalls`/`DEFAULT_MARKET`. Save only `console.log`s. This is
   intentional for now, not a bug to quietly fix — a real persistence

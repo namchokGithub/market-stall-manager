@@ -51,6 +51,7 @@ interface MapCanvasProps {
   onStallDragEnd: (id: string, x: number, y: number) => void
   onStallClick: (stall: Stall, screenPos: { x: number; y: number }) => void
   onStallResize: (id: string, next: { x: number; y: number; width: number; height: number }) => void
+  onTextLabelChange: (id: string, label: string) => void
   onMarketResize: (nextMarket: MarketLayout) => void
   onScaleChange: (scalePercent: number) => void
 }
@@ -85,6 +86,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
     onStallDragEnd,
     onStallClick,
     onStallResize,
+    onTextLabelChange,
     onMarketResize,
     onScaleChange,
   },
@@ -100,6 +102,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   const [isResizingStall, setIsResizingStall] = useState(false)
   const [hasManualView, setHasManualView] = useState(false)
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
+  const [editingText, setEditingText] = useState<{ stall: Stall; value: string } | null>(null)
 
   useEffect(() => {
     const el = containerRef.current
@@ -140,6 +143,10 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
       img.onerror = null
     }
   }, [market.backgroundImageUrl])
+
+  useEffect(() => {
+    if (!editable) setEditingText(null)
+  }, [editable])
 
   const applyScale = (nextScale: number, focal?: { x: number; y: number }) => {
     const clamped = clamp(nextScale, MIN_SCALE, MAX_SCALE)
@@ -193,7 +200,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
 
   const handleResizeDragEnd = (e: KonvaEventObject<DragEvent>) => {
     setIsResizingMarket(false)
-    onMarketResize({ width: e.target.x(), height: e.target.y() })
+    onMarketResize({ ...market, width: e.target.x(), height: e.target.y() })
   }
 
   const handleSize = HANDLE_SCREEN_SIZE / scale
@@ -222,6 +229,14 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
     const nextY = handle.dirY === 1 ? handle.anchorY : localY
     const nextHeight = handle.dirY === 1 ? localY - handle.anchorY : handle.anchorY - localY
     onStallResize(stall.id, { x: nextX, y: nextY, width: nextWidth, height: nextHeight })
+  }
+
+  const commitTextEdit = () => {
+    if (!editingText) return
+    if (editingText.value !== (editingText.stall.label ?? '')) {
+      onTextLabelChange(editingText.stall.id, editingText.value)
+    }
+    setEditingText(null)
   }
 
   return (
@@ -275,6 +290,17 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
                 </Group>
               )
             })()}
+          {bgImage && (
+            <Rect
+              x={0}
+              y={0}
+              width={market.width}
+              height={market.height}
+              fill="#ffffff"
+              opacity={market.backgroundTint / 100}
+              listening={false}
+            />
+          )}
           {stalls.map((stall) => (
             <StallShape
               key={stall.id}
@@ -304,6 +330,9 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
               onDragEnd={(x, y) => {
                 setIsDraggingStall(false)
                 onStallDragEnd(stall.id, x, y)
+              }}
+              onTextEdit={(textStall) => {
+                if (editable) setEditingText({ stall: textStall, value: textStall.label ?? '' })
               }}
             />
           ))}
@@ -355,6 +384,28 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
             ))}
         </Layer>
       </Stage>
+      {editingText && (
+        <input
+          autoFocus
+          type="text"
+          value={editingText.value}
+          onChange={(e) => setEditingText({ ...editingText, value: e.target.value })}
+          onBlur={commitTextEdit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+            if (e.key === 'Escape') setEditingText(null)
+          }}
+          aria-label="Text element content"
+          className="absolute rounded border border-blue-500 bg-white px-2 text-center text-slate-800 outline-none ring-1 ring-blue-300"
+          style={{
+            left: stagePos.x + editingText.stall.x * scale,
+            top: stagePos.y + editingText.stall.y * scale,
+            width: editingText.stall.width * scale,
+            height: editingText.stall.height * scale,
+            fontSize: Math.max(12, 16 * scale),
+          }}
+        />
+      )}
     </div>
   )
 })
