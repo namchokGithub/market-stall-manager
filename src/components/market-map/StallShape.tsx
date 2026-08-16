@@ -1,4 +1,4 @@
-import { Group, Rect, Path, Text } from 'react-konva'
+import { Group, Rect, Circle, Path, Text } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { Stall } from '../../types/stall'
 
@@ -105,6 +105,17 @@ export function StallShape({
             fill="#1e293b"
             listening={false}
           />
+          {stall.status === 'occupied' && (
+            <Circle
+              x={stall.width - 8}
+              y={8}
+              radius={5}
+              fill="#22c55e"
+              stroke="#ffffff"
+              strokeWidth={1}
+              listening={false}
+            />
+          )}
         </>
       )}
     </Group>

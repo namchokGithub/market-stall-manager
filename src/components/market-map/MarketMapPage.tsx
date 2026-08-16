@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { MapCanvas, type MapCanvasHandle } from './MapCanvas'
 import { Toolbar } from './Toolbar'
 import { EditToolsPanel } from './EditToolsPanel'
+import { StallDetailPopup } from './StallDetailPopup'
 import { useMapHistory } from '../../state/useMapHistory'
 import { DEFAULT_MARKET, mockStalls, nextStallCode } from '../../data/mockStalls'
 import type { Stall } from '../../types/stall'
@@ -29,6 +30,7 @@ export function MarketMapPage() {
   const [mode, setMode] = useState<'view' | 'edit'>('view')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [zoomPercent, setZoomPercent] = useState(100)
+  const [detailView, setDetailView] = useState<{ stall: Stall; x: number; y: number } | null>(null)
   const history = useMapHistory<MapState>(savedState)
   const canvasRef = useRef<MapCanvasHandle>(null)
 
@@ -38,7 +40,13 @@ export function MarketMapPage() {
   const handleEnterEdit = () => {
     history.reset(savedState)
     setSelectedId(null)
+    setDetailView(null)
     setMode('edit')
+  }
+
+  const handleStallClick = (stall: Stall, screenPos: { x: number; y: number }) => {
+    if (mode !== 'view' || stall.kind !== 'stall') return
+    setDetailView({ stall, x: screenPos.x, y: screenPos.y })
   }
 
   const handleAddStall = () => {
@@ -90,6 +98,13 @@ export function MarketMapPage() {
     history.commit({ market: nextMarket, stalls: draftState.stalls })
   }
 
+  const handleBackgroundImageChange = (url: string) => {
+    history.commit({
+      market: { ...draftState.market, backgroundImageUrl: url || undefined },
+      stalls: draftState.stalls,
+    })
+  }
+
   const handleStallResize = (
     id: string,
     next: { x: number; y: number; width: number; height: number },
@@ -104,11 +119,13 @@ export function MarketMapPage() {
     setSavedState(draftState)
     console.log(JSON.stringify({ market: draftState.market, stalls: draftState.stalls }, null, 2))
     setSelectedId(null)
+    setDetailView(null)
     setMode('view')
   }
 
   const handleCancel = () => {
     setSelectedId(null)
+    setDetailView(null)
     setMode('view')
   }
 
@@ -129,8 +146,12 @@ export function MarketMapPage() {
           stalls={stalls}
           editable={mode === 'edit'}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={(id) => {
+            setSelectedId(id)
+            if (id === null) setDetailView(null)
+          }}
           onStallDragEnd={handleStallDragEnd}
+          onStallClick={handleStallClick}
           onStallResize={handleStallResize}
           onMarketResize={handleMarketResize}
           onScaleChange={setZoomPercent}
@@ -140,13 +161,23 @@ export function MarketMapPage() {
             canUndo={history.canUndo}
             canRedo={history.canRedo}
             hasSelection={stalls.some((s) => s.id === selectedId)}
+            backgroundImageUrl={draftState.market.backgroundImageUrl}
             onUndo={history.undo}
             onRedo={history.redo}
             onAddStall={handleAddStall}
             onAddBush={handleAddBush}
             onDeleteStall={handleDeleteStall}
+            onBackgroundImageChange={handleBackgroundImageChange}
             onSave={handleSave}
             onCancel={handleCancel}
+          />
+        )}
+        {mode === 'view' && detailView && (
+          <StallDetailPopup
+            stall={detailView.stall}
+            x={detailView.x}
+            y={detailView.y}
+            onClose={() => setDetailView(null)}
           />
         )}
       </div>

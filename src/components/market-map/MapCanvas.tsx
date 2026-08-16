@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Stage, Layer, Rect } from 'react-konva'
+import { Stage, Layer, Rect, Image as KonvaImage, Group } from 'react-konva'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { Stall } from '../../types/stall'
@@ -49,6 +49,7 @@ interface MapCanvasProps {
   selectedId: string | null
   onSelect: (id: string | null) => void
   onStallDragEnd: (id: string, x: number, y: number) => void
+  onStallClick: (stall: Stall, screenPos: { x: number; y: number }) => void
   onStallResize: (id: string, next: { x: number; y: number; width: number; height: number }) => void
   onMarketResize: (nextMarket: MarketLayout) => void
   onScaleChange: (scalePercent: number) => void
@@ -82,6 +83,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
     selectedId,
     onSelect,
     onStallDragEnd,
+    onStallClick,
     onStallResize,
     onMarketResize,
     onScaleChange,
@@ -97,6 +99,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   const [isResizingMarket, setIsResizingMarket] = useState(false)
   const [isResizingStall, setIsResizingStall] = useState(false)
   const [hasManualView, setHasManualView] = useState(false)
+  const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
 
   useEffect(() => {
     const el = containerRef.current
@@ -120,6 +123,23 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   useEffect(() => {
     onScaleChange(Math.round(scale * 100))
   }, [scale, onScaleChange])
+
+  useEffect(() => {
+    const url = market.backgroundImageUrl
+    if (!url) {
+      setBgImage(null)
+      return
+    }
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => setBgImage(img)
+    img.onerror = () => setBgImage(null)
+    img.src = url
+    return () => {
+      img.onload = null
+      img.onerror = null
+    }
+  }, [market.backgroundImageUrl])
 
   const applyScale = (nextScale: number, focal?: { x: number; y: number }) => {
     const clamped = clamp(nextScale, MIN_SCALE, MAX_SCALE)
@@ -227,11 +247,34 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
             y={0}
             width={market.width}
             height={market.height}
-            fill="#ffffff"
+            fill={bgImage ? undefined : '#ffffff'}
             stroke="#475569"
             strokeWidth={2}
             listening={false}
           />
+          {bgImage &&
+            (() => {
+              const coverScale = Math.max(market.width / bgImage.width, market.height / bgImage.height)
+              const drawWidth = bgImage.width * coverScale
+              const drawHeight = bgImage.height * coverScale
+              return (
+                <Group
+                  clipX={0}
+                  clipY={0}
+                  clipWidth={market.width}
+                  clipHeight={market.height}
+                  listening={false}
+                >
+                  <KonvaImage
+                    image={bgImage}
+                    x={(market.width - drawWidth) / 2}
+                    y={(market.height - drawHeight) / 2}
+                    width={drawWidth}
+                    height={drawHeight}
+                  />
+                </Group>
+              )
+            })()}
           {stalls.map((stall) => (
             <StallShape
               key={stall.id}
@@ -252,6 +295,10 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
               })}
               onSelect={() => {
                 if (editable) onSelect(stall.id)
+                onStallClick(stall, {
+                  x: stagePos.x + (stall.x + stall.width) * scale + 8,
+                  y: stagePos.y + stall.y * scale,
+                })
               }}
               onDragStart={() => setIsDraggingStall(true)}
               onDragEnd={(x, y) => {

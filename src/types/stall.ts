@@ -6,4 +6,8 @@ export interface Stall {
   y: number
   width: number
   height: number
+  status?: 'vacant' | 'occupied'
+  category?: string
+  renterName?: string
+  contact?: string
 }
