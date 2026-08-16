@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { MapCanvas, type MapCanvasHandle } from './MapCanvas'
 import { Toolbar } from './Toolbar'
+import { EditToolsPanel } from './EditToolsPanel'
 import { useMapHistory } from '../../state/useMapHistory'
 import { DEFAULT_MARKET, mockStalls, nextStallCode } from '../../data/mockStalls'
 import type { Stall } from '../../types/stall'
@@ -112,26 +113,16 @@ export function MarketMapPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen flex-col">
+    <div className="flex h-full w-full flex-col">
       <Toolbar
         mode={mode}
         zoomPercent={zoomPercent}
-        canUndo={history.canUndo}
-        canRedo={history.canRedo}
-        hasSelection={stalls.some((s) => s.id === selectedId)}
         onEnterEdit={handleEnterEdit}
-        onUndo={history.undo}
-        onRedo={history.redo}
-        onAddStall={handleAddStall}
-        onAddBush={handleAddBush}
-        onDeleteStall={handleDeleteStall}
         onZoomOut={() => canvasRef.current?.zoomOut()}
         onZoomIn={() => canvasRef.current?.zoomIn()}
         onResetView={() => canvasRef.current?.resetView()}
-        onSave={handleSave}
-        onCancel={handleCancel}
       />
-      <div className="flex-1">
+      <div className="relative flex-1">
         <MapCanvas
           ref={canvasRef}
           market={market}
@@ -144,6 +135,20 @@ export function MarketMapPage() {
           onMarketResize={handleMarketResize}
           onScaleChange={setZoomPercent}
         />
+        {mode === 'edit' && (
+          <EditToolsPanel
+            canUndo={history.canUndo}
+            canRedo={history.canRedo}
+            hasSelection={stalls.some((s) => s.id === selectedId)}
+            onUndo={history.undo}
+            onRedo={history.redo}
+            onAddStall={handleAddStall}
+            onAddBush={handleAddBush}
+            onDeleteStall={handleDeleteStall}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
+        )}
       </div>
     </div>
   )
