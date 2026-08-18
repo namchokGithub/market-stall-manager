@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { cancelBooking } from '../../data/bookingsRepo'
 import type { Booking } from '../../types/booking'
@@ -35,6 +42,7 @@ export function BookingDetailDialog({ booking, stallCode, onClose, onCancelled }
           <DialogTitle>
             {stallCode} — {booking.renterName}
           </DialogTitle>
+          <DialogDescription>View or cancel this booking.</DialogDescription>
         </DialogHeader>
         <div className="space-y-1.5 text-sm">
           <div className="flex justify-between">

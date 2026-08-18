@@ -21,7 +21,11 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
 
   const refetchBookings = async () => {
-    setBookings(await listBookings())
+    try {
+      setBookings(await listBookings())
+    } catch (err) {
+      console.error('Failed to refetch bookings', err)
+    }
   }
 
   const selectedStallCode = stalls.find((s) => s.id === selectedBooking?.stallId)?.code ?? ''
@@ -45,9 +49,9 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
           initialStallId={formState.stallId}
           initialDate={formState.date}
           onClose={() => setFormState(null)}
-          onCreated={() => {
+          onCreated={async () => {
             setFormState(null)
-            refetchBookings()
+            await refetchBookings()
           }}
         />
       )}
@@ -57,9 +61,9 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
           booking={selectedBooking}
           stallCode={selectedStallCode}
           onClose={() => setSelectedBooking(null)}
-          onCancelled={() => {
+          onCancelled={async () => {
             setSelectedBooking(null)
-            refetchBookings()
+            await refetchBookings()
           }}
         />
       )}

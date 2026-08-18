@@ -2,11 +2,13 @@
 
 Admin app for managing a market's physical layout. The Market Map page is
 fully built (view/edit a market floor plan with stalls and general map
-elements); Booking and Dashboard are routed placeholders waiting on their own
-design work. Persistence and auth are real: Firebase Authentication
-(email/password, no self-registration) gates every route, and the market
-layout persists to a single Firestore document. See "Firebase setup" below
-before running this anywhere but a fully-configured environment.
+elements); Booking is also built (timeline view, create/cancel bookings,
+stall occupancy derived from active bookings); Dashboard remains a routed
+placeholder waiting on its own design work. Persistence and auth are real:
+Firebase Authentication (email/password, no self-registration) gates every
+route, and the market layout persists to a single Firestore document. See
+"Firebase setup" below before running this anywhere but a fully-configured
+environment.
 
 ## Tech Stack
 
@@ -112,7 +114,8 @@ src/
   routes/
     AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar (signed-in email, sign-out) + <Outlet/>
     LoginPage.tsx            # email/password sign-in, forgot-password; no self-registration
-    BookingPage.tsx          # placeholder — not designed yet
+    BookingPage.tsx          # loading/error boundary: loads stalls (via marketDoc) + bookings (via
+                              #   bookingsRepo), then renders LoadedBookingPage; retry button on load failure
     DashboardPage.tsx        # placeholder — not designed yet
   components/market-map/
     MarketMapPage.tsx        # loading/error boundary only: loads MapState via marketDoc, then renders
@@ -182,13 +185,25 @@ interface Stall {
   code: string                  // e.g. "A01" — '' for non-stall elements
   x: number; y: number          // logical coordinates, relative to market origin (0,0)
   width: number; height: number
-  status?: 'vacant' | 'occupied'
   category?: string
-  renterName?: string
-  contact?: string
   label?: string                // editable text content; Zone also displays it
 }
+
+interface DisplayStall extends Stall {
+  status?: 'vacant' | 'occupied'
+  renterName?: string
+  contact?: string
+}
 ```
+
+`Stall` is the persisted shape (`markets/default`'s `stalls[]`) and no longer
+carries occupancy — `status`/`renterName`/`contact` were moved out of it once
+Booking became the source of truth for who's renting a stall and when.
+`DisplayStall` (`src/types/stall.ts`) is a render-only type layered on top:
+`bookingOccupancy.ts` derives it from `Stall[]` plus today's active bookings,
+and the Market Map components (`StallShape`, `StallDetailPopup`) consume
+`DisplayStall[]`, not `Stall[]`, so they can still show occupancy without it
+being persisted on the stall itself.
 
 `LoadedMarketMapPage` bundles both into one `MapState = { market, stalls }`
 and runs the *whole thing* through one `useMapHistory<MapState>` instance —
@@ -252,9 +267,6 @@ why market resize behaves differently from stall resize (which has real
 
 ## What's next (each gets its own brainstorm → design → implementation)
 
-- **Booking page** (`src/routes/BookingPage.tsx`) — no requirements
-  gathered yet: what does booking a stall actually mean (date range?
-  approval step?), how it relates to `Stall.status`/`renterName`.
 - **Dashboard page** (`src/routes/DashboardPage.tsx`) — no requirements
   yet: what metrics/content it should show.
 
@@ -269,6 +281,10 @@ why market resize behaves differently from stall resize (which has real
 - `docs/superpowers/plans/2026-08-17-firebase-integration.md` — implementation
   plan for Firebase Authentication + Firestore persistence, including the
   account/project setup steps condensed into "Firebase setup" above
+- `docs/superpowers/specs/2026-08-18-booking-design.md` — Booking feature
+  spec (timeline view, create/cancel, stall occupancy)
+- `docs/superpowers/plans/2026-08-18-booking.md` — implementation plan for
+  that spec
 
 Everything else (Market Boundary, resize, bushes, app shell/routing,
 floating tools panel, stall detail popup, background image) was built

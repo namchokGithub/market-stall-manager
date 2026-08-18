@@ -17,7 +17,17 @@ service cloud.firestore {
 
     match /bookings/{bookingId} {
       allow read: if signedIn();
-      allow create, update: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.status == 'confirmed'
+        && request.resource.data.stallId is string
+        && request.resource.data.renterName is string
+        && request.resource.data.startDate is string
+        && request.resource.data.endDate is string
+        && request.resource.data.startDate <= request.resource.data.endDate;
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        && resource.data.status == 'confirmed'
+        && request.resource.data.status == 'cancelled';
       allow delete: if false;
     }
 

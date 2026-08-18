@@ -1,5 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { createBooking } from '../../data/bookingsRepo'
 import type { Stall } from '../../types/stall'
@@ -31,11 +38,17 @@ export function BookingFormDialog({ stalls, initialStallId, initialDate, onClose
       return
     }
 
+    const trimmedRenterName = renterName.trim()
+    if (!trimmedRenterName) {
+      setError('Renter name is required.')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       await createBooking({
         stallId,
-        renterName,
+        renterName: trimmedRenterName,
         contact: contact || undefined,
         startDate,
         endDate,
@@ -54,6 +67,7 @@ export function BookingFormDialog({ stalls, initialStallId, initialDate, onClose
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New booking</DialogTitle>
+          <DialogDescription>Reserve a stall for a date range.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-1">

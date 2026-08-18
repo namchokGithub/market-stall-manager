@@ -22,7 +22,7 @@ export function MarketMapPage() {
     try {
       const [mapState, bookings] = await Promise.all([
         loadMarketState(),
-        listBookings(),
+        listBookings().catch(() => []),
       ]);
       setLoadedData({ mapState, bookings });
     } catch (err) {
