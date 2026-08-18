@@ -267,6 +267,8 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
             listening={false}
           />
           {bgImage &&
+            size.width > 0 &&
+            size.height > 0 &&
             (() => {
               const coverScale = Math.max(market.width / bgImage.width, market.height / bgImage.height)
               const drawWidth = bgImage.width * coverScale
