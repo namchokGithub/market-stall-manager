@@ -111,8 +111,14 @@ export function LoadedMarketMapPage({
   };
 
   const handleBackgroundImageChange = (url: string) => {
+    // Omit the key entirely when cleared rather than setting it to
+    // `undefined` — Firestore's setDoc() rejects a literal `undefined`
+    // field value, and this keeps the in-memory state honest regardless
+    // of the Firestore-level `ignoreUndefinedProperties` guard.
+    const { backgroundImageUrl: _backgroundImageUrl, ...rest } =
+      draftState.market;
     history.commit({
-      market: { ...draftState.market, backgroundImageUrl: url || undefined },
+      market: url ? { ...rest, backgroundImageUrl: url } : rest,
       stalls: draftState.stalls,
     });
   };
