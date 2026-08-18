@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const currentUidRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // the previous user (if any) must never leak to the next one.
       setIsLoading(true)
       setUser(nextUser)
+      currentUidRef.current = nextUser?.uid ?? null
 
       if (!nextUser) {
         setIsAdmin(false)
@@ -39,17 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      getDoc(doc(db, 'admins', nextUser.uid))
+      const requestUid = nextUser.uid
+      getDoc(doc(db, 'admins', requestUid))
         .then((snapshot) => {
-          if (cancelled) return
+          if (cancelled || currentUidRef.current !== requestUid) return
           setIsAdmin(snapshot.data()?.role === 'admin')
         })
         .catch(() => {
-          if (cancelled) return
+          if (cancelled || currentUidRef.current !== requestUid) return
           setIsAdmin(false)
         })
         .finally(() => {
-          if (cancelled) return
+          if (cancelled || currentUidRef.current !== requestUid) return
           setIsLoading(false)
         })
     })

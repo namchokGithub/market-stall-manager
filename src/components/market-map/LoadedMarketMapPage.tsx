@@ -4,6 +4,7 @@ import { Toolbar } from "./Toolbar";
 import { EditToolsPanel } from "./EditToolsPanel";
 import { StallDetailPopup } from "./StallDetailPopup";
 import { useMapHistory } from "../../state/useMapHistory";
+import { useAuth } from "../../auth/AuthProvider";
 import { nextStallCode } from "../../data/mockStalls";
 import { ELEMENT_TYPES } from "../../data/elementTypes";
 import { saveMarketState } from "../../data/marketDoc";
@@ -34,6 +35,7 @@ interface LoadedMarketMapPageProps {
 export function LoadedMarketMapPage({
   initialState,
 }: LoadedMarketMapPageProps) {
+  const { isAdmin } = useAuth();
   const [savedState, setSavedState] = useState<MapState>(initialState);
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -172,6 +174,7 @@ export function LoadedMarketMapPage({
       <Toolbar
         mode={mode}
         zoomPercent={zoomPercent}
+        canEdit={isAdmin}
         onEnterEdit={handleEnterEdit}
         onZoomOut={() => canvasRef.current?.zoomOut()}
         onZoomIn={() => canvasRef.current?.zoomIn()}
