@@ -22,8 +22,12 @@ before running this anywhere but a fully-configured environment.
 - lucide-react — all icons, no emoji anywhere (hard rule)
 - konva / react-konva — canvas rendering
 - react-router (`react-router`, **not** `react-router-dom` — v7+ unified
-  the packages; import `BrowserRouter`/`Routes`/`Route`/`NavLink`/`Outlet`
-  straight from `react-router`)
+  the packages; import `HashRouter`/`Routes`/`Route`/`NavLink`/`Outlet`
+  straight from `react-router`). Uses `HashRouter`, not `BrowserRouter` —
+  this deploys to GitHub Pages, a static host with no server-side rewrite,
+  so a hard refresh or direct link to a non-root route (e.g. `/booking`)
+  would 404 under `BrowserRouter`. URLs look like
+  `.../#/market-map` instead of `.../market-map` as the tradeoff.
 
 No test framework. Verification is `pnpm typecheck` + `pnpm build` + manual
 `pnpm dev` checks — smoke-testing the Firebase-backed features (sign-in,
@@ -69,11 +73,32 @@ pnpm typecheck   # tsc --noEmit
 pnpm build       # tsc --noEmit && vite build
 ```
 
+## Deploy (GitHub Pages)
+
+`.github/workflows/deploy-pages.yml` builds and deploys to GitHub Pages on
+every push to `main` (also runnable manually via the Actions tab's
+"Run workflow" button). One-time setup required:
+
+1. **Repo Settings → Pages → Source: "GitHub Actions"** (not "Deploy from a
+   branch") — the workflow won't publish anything until this is set.
+2. **Add the same six `VITE_FIREBASE_*` values as GitHub Actions secrets**
+   (Settings → Secrets and variables → Actions → New repository secret) —
+   the CI build has no `.env` (gitignored), and Vite bakes these in at
+   build time, so a deploy without them ships a broken (unconfigured)
+   Firebase app.
+
+The site publishes to `https://<org>.github.io/market-stall-manager/` — a
+project page, not a user/org root page, which is why `vite.config.ts` sets
+`base: '/market-stall-manager/'` (asset URLs break without it) and `App.tsx`
+uses `HashRouter` (see "Tech Stack" above — GitHub Pages can't rewrite
+arbitrary paths back to `index.html` the way Firebase Hosting or a real
+server would).
+
 ## App structure
 
 ```
 src/
-  App.tsx                  # BrowserRouter + route table (login route + RequireAuth-gated app routes)
+  App.tsx                  # HashRouter + route table (login route + RequireAuth-gated app routes)
   main.tsx                  # ReactDOM root, wraps <App/> in <AuthProvider>
   auth/
     AuthProvider.tsx         # onAuthStateChanged subscription; exposes useAuth() -> { user, isAdmin, isLoading }

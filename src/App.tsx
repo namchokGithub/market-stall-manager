@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
+import { HashRouter, Routes, Route, Navigate } from 'react-router'
 import { AppShell } from './routes/AppShell'
 import { LoginPage } from './routes/LoginPage'
 import { RequireAuth } from './auth/RequireAuth'
@@ -8,7 +8,7 @@ import { DashboardPage } from './routes/DashboardPage'
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireAuth />}>
@@ -20,7 +20,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

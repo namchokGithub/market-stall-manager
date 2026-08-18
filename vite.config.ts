@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
+  base: '/market-stall-manager/',
   plugins: [react()],
   resolve: {
     alias: {
