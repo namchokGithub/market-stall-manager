@@ -1,5 +1,9 @@
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { Map, CalendarCheck, LayoutDashboard } from 'lucide-react'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+import { useAuth } from '@/auth/AuthProvider'
+import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { to: '/market-map', label: 'Market Map', icon: Map },
@@ -10,6 +14,7 @@ const NAV_ITEMS = [
 export function AppShell() {
   const location = useLocation()
   const currentPage = NAV_ITEMS.find((item) => location.pathname.startsWith(item.to))
+  const { user } = useAuth()
 
   return (
     <div className="flex h-screen w-screen">
@@ -35,8 +40,14 @@ export function AppShell() {
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center border-b border-slate-200 bg-white px-4">
+        <header className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4">
           <span className="text-sm font-medium text-slate-700">{currentPage?.label ?? ''}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">{user?.email}</span>
+            <Button variant="outline" size="sm" onClick={() => signOut(auth)}>
+              Sign out
+            </Button>
+          </div>
         </header>
         <main className="min-h-0 flex-1">
           <Outlet />
