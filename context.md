@@ -10,10 +10,12 @@ this doc is the *why*, not the *what*.
 An admin app for laying out a physical market: stalls and other map elements,
 a resizable market boundary, pan/zoom, undo/redo, save/cancel. Elements use a
 single `Stall` storage shape differentiated by `ElementType`; Stall retains
-its renter/status details while other types are visual layout objects. No backend
-yet — a future iteration will add Firebase or similar; until then, "Save"
-just commits to React state and `console.log`s the JSON shape a backend
-would eventually receive.
+its renter/status details while other types are visual layout objects.
+Persistence is real: Firebase Authentication (email/password, no
+self-registration) protects every route, and "Save" writes the whole
+`{ market, stalls }` snapshot to a single Firestore document
+(`markets/default`) via `src/data/marketDoc.ts`. See `README.md`'s
+"Firebase setup" section to get a fresh clone actually running.
 
 ## Version pins — do not blindly `add`/`init` these
 
@@ -67,9 +69,10 @@ the way both of the above were verified.
 - **`MapCanvas` is deliberately mode-agnostic.** It only knows
   `editable: boolean`, never `'view' | 'edit'` as a concept. All
   view/edit-mode *decisions* (what's clickable, what shows) live in
-  `MarketMapPage`. Keep it that way — it's what let the stall-detail-
-  popup feature (View-Mode-only) get added without touching any of
-  `MapCanvas`'s drag/resize/zoom logic.
+  `LoadedMarketMapPage` (`MarketMapPage` itself is only the Firestore
+  loading/error boundary now — see below). Keep it that way — it's what
+  let the stall-detail-popup feature (View-Mode-only) get added without
+  touching any of `MapCanvas`'s drag/resize/zoom logic.
 - **Map elements are config-driven.** `src/data/elementTypes.ts` is the
   source of truth for each `ElementType`'s category, label, Lucide icon,
   color, and default size. The Add Element menu and canvas rendering both
@@ -78,8 +81,8 @@ the way both of the above were verified.
   it from the installed `lucide-react` icon source rather than guessing.
 - **Text uses an HTML overlay, not Konva text editing.** Double-clicking a
   Text element opens a positioned `<input>` over the canvas in `MapCanvas`.
-  Blur or Enter commits `label` via `MarketMapPage`, keeping it in the same
-  history, Save, and Cancel lifecycle. Escape dismisses without committing.
+  Blur or Enter commits `label` via `LoadedMarketMapPage`, keeping it in the
+  same history, Save, and Cancel lifecycle. Escape dismisses without committing.
 - **The Konva drag-layering bug (fixed, but worth knowing about).** An
   earlier version tried "render the dragged stall on its own top `Layer`"
   to keep it visually on top while dragging. This broke every drag
@@ -115,10 +118,20 @@ the way both of the above were verified.
   ordinary resizable icon boxes, not lines with draggable endpoints. Zone is
   a low-opacity resizable box with an always-visible label, not a drawn area
   with editable fill color. The latter is the higher-priority follow-up.
-- **No persistence.** Reload the page and everything reverts to
-  `mockStalls`/`DEFAULT_MARKET`. Save only `console.log`s. This is
-  intentional for now, not a bug to quietly fix — a real persistence
-  layer (Firebase or otherwise) is its own future project.
+- **Persistence exists now — don't reintroduce the old console.log-only
+  behavior.** Save writes `{ market, stalls }` to Firestore
+  (`markets/default`) via `saveMarketState` in `src/data/marketDoc.ts`;
+  load reads that same document and falls back to
+  `mockStalls`/`DEFAULT_MARKET` only when it doesn't exist yet (first run).
+  `src/lib/firebase.ts`'s `db` is created with
+  `initializeFirestore(app, { ignoreUndefinedProperties: true })` rather
+  than plain `getFirestore(app)` — this is load-bearing: `MarketLayout` and
+  `Stall` both have optional fields, and without this option `setDoc`
+  throws synchronously the instant one of those fields is set to
+  `undefined` instead of omitted. Still explicitly out of scope: real-time
+  sync (`onSnapshot`), multi-market support, and Firebase Storage image
+  upload — see `docs/superpowers/plans/2026-08-17-firebase-integration.md`'s
+  "Explicitly deferred" section.
 - Known small UX gaps are listed in `README.md`'s "Known gaps" section
   (popup viewport clamping, no collision detection, silent image-load
   failures) — none are urgent, all are easy to find via `grep` for the

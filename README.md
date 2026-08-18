@@ -3,8 +3,10 @@
 Admin app for managing a market's physical layout. The Market Map page is
 fully built (view/edit a market floor plan with stalls and general map
 elements); Booking and Dashboard are routed placeholders waiting on their own
-design work. No backend yet — everything lives in React state for the
-current browser session.
+design work. Persistence and auth are real: Firebase Authentication
+(email/password, no self-registration) gates every route, and the market
+layout persists to a single Firestore document. See "Firebase setup" below
+before running this anywhere but a fully-configured environment.
 
 ## Tech Stack
 
@@ -24,7 +26,39 @@ current browser session.
   straight from `react-router`)
 
 No test framework. Verification is `pnpm typecheck` + `pnpm build` + manual
-`pnpm dev` checks.
+`pnpm dev` checks — smoke-testing the Firebase-backed features (sign-in,
+save/load, admin gating) needs a real Firebase project configured per
+"Firebase setup" below; `pnpm typecheck`/`pnpm build` alone don't touch that.
+
+## Firebase setup
+
+This app will not boot without real Firebase configuration — see the last
+point below before you assume something's broken.
+
+1. **Copy `.env.example` to `.env`** and fill in the six `VITE_FIREBASE_*`
+   values from a real Firebase project's Web app config (`apiKey`,
+   `authDomain`, `projectId`, `storageBucket`, `messagingSenderId`, `appId`).
+2. **Create (or pick) a Firebase project** in the
+   [Firebase Console](https://console.firebase.google.com), enable
+   **Firestore** (Native mode, any region), and add a **Web app** to get
+   the config values above.
+3. **In Authentication → Sign-in method, enable Email/Password.** Set a
+   password policy and enable email-enumeration protection. There is no
+   public sign-up screen in this app — accounts are provisioned by an
+   admin directly in the Firebase Console.
+4. **Create the first admin account** in Firebase Authentication, verify
+   its email, then in Firestore create `admins/<ADMIN_UID>` with
+   `{ role: "admin" }`. Do this from the Firebase Console — its privileged
+   access isn't constrained by the client Firestore rules below, which is
+   exactly why it's the only way to bootstrap the first admin.
+5. **Publish `firestore.rules`** (already committed at the repo root) via
+   the Firebase Console or the CLI (`firebase deploy --only
+   firestore:rules`). Until these rules are published, Firestore's default
+   rules apply instead and the app's authorization model isn't actually
+   enforced server-side.
+6. **The app will not boot — it throws at startup — with a blank
+   `VITE_FIREBASE_API_KEY`.** That's Firebase's own required behavior, not
+   a bug in this codebase; it's expected until you fill in real config.
 
 ## Running locally
 
@@ -39,33 +73,53 @@ pnpm build       # tsc --noEmit && vite build
 
 ```
 src/
-  App.tsx                  # BrowserRouter + route table
+  App.tsx                  # BrowserRouter + route table (login route + RequireAuth-gated app routes)
+  main.tsx                  # ReactDOM root, wraps <App/> in <AuthProvider>
+  auth/
+    AuthProvider.tsx         # onAuthStateChanged subscription; exposes useAuth() -> { user, isAdmin, isLoading }
+    RequireAuth.tsx          # route wrapper: redirects to /login when signed out, renders <Outlet/> otherwise
+  lib/
+    firebase.ts              # initializeApp + exported auth/db singletons (Firestore initialized with
+                              #   ignoreUndefinedProperties: true — see "Data model" below)
+    utils.ts                 # shadcn's cn() helper
   routes/
-    AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar + <Outlet/>
+    AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar (signed-in email, sign-out) + <Outlet/>
+    LoginPage.tsx            # email/password sign-in, forgot-password; no self-registration
     BookingPage.tsx          # placeholder — not designed yet
     DashboardPage.tsx        # placeholder — not designed yet
   components/market-map/
-    MarketMapPage.tsx        # owns all Market Map state (see below)
+    MarketMapPage.tsx        # loading/error boundary only: loads MapState via marketDoc, then renders
+                              #   LoadedMarketMapPage; retry button on load failure
+    LoadedMarketMapPage.tsx  # owns all Market Map state once loaded (see below) — undo/redo history,
+                              #   save/cancel, all the handlers that used to live directly in MarketMapPage.tsx
     Toolbar.tsx               # always-visible bar: title, mode toggle, zoom controls
     EditToolsPanel.tsx        # floating card (top-right of canvas), Edit Mode only:
                               #   undo/redo, categorized Add Element menu, delete, background-image URL,
-                              #   save/cancel
+                              #   save/cancel, isSaving/saveError UI
     MapCanvas.tsx             # react-konva Stage: pan/zoom/fit-to-screen, market boundary
                               #   + resize handles, element rendering + drag/resize, Text input overlay,
                               #   background-image cover-fit rendering
     StallShape.tsx            # stall, editable Text, or generic icon-in-a-box element
     StallDetailPopup.tsx       # View-Mode-only click popup: status/category/renter/contact
   state/useMapHistory.ts      # generic undo/redo hook, snapshots a whole T (here: MapState)
-  data/elementTypes.ts        # type/category/icon/color/default-size source of truth
+  data/
+    elementTypes.ts            # type/category/icon/color/default-size source of truth
+    marketDoc.ts                # loadMarketState/saveMarketState — the one Firestore doc (markets/default),
+                                #   with runtime validation of data read back before it reaches Konva
+    mockStalls.ts               # DEFAULT_MARKET, mockStalls, nextStallCode, ROW_CAPACITY — used only as the
+                                #   seed when markets/default doesn't exist yet
   types/
     stall.ts                  # Stall data used for every placed map element
     market.ts                 # MarketLayout
-  data/mockStalls.ts          # DEFAULT_MARKET, mockStalls, nextStallCode, ROW_CAPACITY
+    marketState.ts             # MapState = { market, stalls } — shared between LoadedMarketMapPage and marketDoc.ts
   components/ui/              # shadcn Button and DropdownMenu
 ```
 
-Routes: `/` redirects to `/market-map`. `/market-map`, `/booking`,
-`/dashboard` all render inside `AppShell`.
+Routes: `/login` is public. Everything else (`/` — redirects to
+`/market-map` — plus `/market-map`, `/booking`, `/dashboard`) sits behind
+`RequireAuth`, which renders `AppShell`'s sidebar/top-bar shell only once
+a user is signed in, otherwise redirecting to `/login` and returning them
+to their original destination after a successful sign-in.
 
 ## Data model
 
@@ -96,10 +150,12 @@ interface Stall {
 }
 ```
 
-`MarketMapPage` bundles both into one `MapState = { market, stalls }` and
-runs the *whole thing* through one `useMapHistory<MapState>` instance —
+`LoadedMarketMapPage` bundles both into one `MapState = { market, stalls }`
+and runs the *whole thing* through one `useMapHistory<MapState>` instance —
 market resize, element drag/resize/add/delete, Text-label edits, and background-image changes
-all share one undo/redo stack and one Save/Cancel.
+all share one undo/redo stack and one Save/Cancel. `MarketMapPage` itself
+is just the loading/error boundary that fetches this state (via
+`loadMarketState` in `src/data/marketDoc.ts`) before handing it off.
 
 **Important:** `MarketLayout` has no `x`/`y` — its origin is always fixed
 at logical `(0, 0)`. Market-boundary resize handles all resize away from
@@ -128,8 +184,10 @@ why market resize behaves differently from stall resize (which has real
   itself (4 corners, all anchored at the fixed origin, can't shrink below
   the current stalls' bounding box); set a background image by URL
   (cover-fit, clipped to the boundary) and adjust its white tint (0–100%,
-  default 50%, without changing element opacity); undo/redo; Save (commits +
-  `console.log`s `{ market, stalls }`) / Cancel (discards the draft).
+  default 50%, without changing element opacity); undo/redo; Save (persists
+  `{ market, stalls }` to the `markets/default` Firestore document,
+  disabling itself and showing an inline error on failure) / Cancel
+  (discards the draft).
 - Toolbar (always visible, both modes): title, Edit Mode toggle, zoom
   controls. Everything else lives in the floating `EditToolsPanel`
   (Edit Mode only, top-right over the canvas).
@@ -138,10 +196,10 @@ why market resize behaves differently from stall resize (which has real
 
 - `StallDetailPopup` doesn't clamp to the viewport — a stall near the
   right edge can push the popup off-screen.
-- Background image: no persistence (lost on reload, same as everything
-  else), no error UI if the URL fails to load (fails silently), and a
-  data-URL background would bloat the Save Layout console.log — URL-only
-  by design.
+- Background image: persists to Firestore along with the rest of the
+  layout, but there's still no error UI if the URL fails to load (fails
+  silently), and a data-URL background would bloat the saved Firestore
+  document — URL-only by design.
 - No collision detection between map elements (overlap is allowed).
 - Wall and Fence are icon-in-a-box elements in v1, not true endpoint-based
   line segments. Zone does not yet support drawing an arbitrary area or
@@ -159,8 +217,6 @@ why market resize behaves differently from stall resize (which has real
   approval step?), how it relates to `Stall.status`/`renterName`.
 - **Dashboard page** (`src/routes/DashboardPage.tsx`) — no requirements
   yet: what metrics/content it should show.
-- Eventually: real backend/persistence (currently only an in-memory
-  session + a `console.log` on Save).
 
 ## Design docs
 
@@ -170,8 +226,11 @@ why market resize behaves differently from stall resize (which has real
   for that spec
 - `docs/superpowers/plans/2026-08-16-map-elements.md` — implementation plan
   for generalized map elements
+- `docs/superpowers/plans/2026-08-17-firebase-integration.md` — implementation
+  plan for Firebase Authentication + Firestore persistence, including the
+  account/project setup steps condensed into "Firebase setup" above
 
-Everything past that plan (Market Boundary, resize, bushes, app shell/
-routing, floating tools panel, stall detail popup, background image) was
-built directly in conversation without a separate spec/plan doc — this
-README is the up-to-date reference for that work.
+Everything else (Market Boundary, resize, bushes, app shell/routing,
+floating tools panel, stall detail popup, background image) was built
+directly in conversation without a separate spec/plan doc — this README
+is the up-to-date reference for that work.
