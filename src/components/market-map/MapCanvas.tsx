@@ -238,6 +238,19 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
     setEditingText(null)
   }
 
+  // Konva composites any shape using opacity/shadow (buffer-canvas shapes —
+  // e.g. the tint Rect below, or every unselected generic map element in
+  // StallShape.tsx) through stage.bufferCanvas, sized to the Stage's own
+  // width/height. Before the ResizeObserver above has fired once, size is
+  // still {0, 0}; drawing anything through that path at 0x0 throws
+  // "Failed to execute 'drawImage' ... canvas element with a width or
+  // height of 0" (verified against Konva's Shape.js buffer-canvas
+  // compositing). So the Stage must not render — and therefore must not
+  // draw — until the container has a real measured size.
+  if (size.width === 0 || size.height === 0) {
+    return <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-100" />
+  }
+
   return (
     <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-100">
       <Stage
@@ -267,8 +280,6 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
             listening={false}
           />
           {bgImage &&
-            size.width > 0 &&
-            size.height > 0 &&
             (() => {
               const coverScale = Math.max(market.width / bgImage.width, market.height / bgImage.height)
               const drawWidth = bgImage.width * coverScale
