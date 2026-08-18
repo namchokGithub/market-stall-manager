@@ -8,9 +8,12 @@ import { useAuth } from "../../auth/AuthProvider";
 import { nextStallCode } from "../../data/mockStalls";
 import { ELEMENT_TYPES } from "../../data/elementTypes";
 import { saveMarketState } from "../../data/marketDoc";
+import { activeBookingsByStallId, withOccupancy } from "../../data/bookingOccupancy";
+import { todayIso } from "../../lib/dates";
 import type { ElementType, Stall } from "../../types/stall";
 import type { MarketLayout } from "../../types/market";
 import type { MapState } from "../../types/marketState";
+import type { Booking } from "../../types/booking";
 
 const NEW_ELEMENT_ANCHOR = { x: 40, y: 460 };
 
@@ -30,10 +33,12 @@ function clampAnchor(
 
 interface LoadedMarketMapPageProps {
   initialState: MapState;
+  initialBookings: Booking[];
 }
 
 export function LoadedMarketMapPage({
   initialState,
+  initialBookings,
 }: LoadedMarketMapPageProps) {
   const { isAdmin } = useAuth();
   const [savedState, setSavedState] = useState<MapState>(initialState);
@@ -41,7 +46,7 @@ export function LoadedMarketMapPage({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoomPercent, setZoomPercent] = useState(100);
   const [detailView, setDetailView] = useState<{
-    stall: Stall;
+    stallId: string;
     x: number;
     y: number;
   } | null>(null);
@@ -51,7 +56,10 @@ export function LoadedMarketMapPage({
   const canvasRef = useRef<MapCanvasHandle>(null);
 
   const draftState = history.present;
-  const { market, stalls } = mode === "edit" ? draftState : savedState;
+  const { market, stalls: rawStalls } = mode === "edit" ? draftState : savedState;
+  const activeBookings = activeBookingsByStallId(initialBookings, todayIso());
+  const stalls = withOccupancy(rawStalls, activeBookings);
+  const detailStall = detailView ? stalls.find((s) => s.id === detailView.stallId) ?? null : null;
 
   const handleEnterEdit = () => {
     history.reset(savedState);
@@ -65,7 +73,7 @@ export function LoadedMarketMapPage({
     screenPos: { x: number; y: number },
   ) => {
     if (mode !== "view" || stall.kind !== "stall") return;
-    setDetailView({ stall, x: screenPos.x, y: screenPos.y });
+    setDetailView({ stallId: stall.id, x: screenPos.x, y: screenPos.y });
   };
 
   const handleAddElement = (type: ElementType) => {
@@ -223,9 +231,9 @@ export function LoadedMarketMapPage({
             onCancel={handleCancel}
           />
         )}
-        {mode === "view" && detailView && (
+        {mode === "view" && detailView && detailStall && (
           <StallDetailPopup
-            stall={detailView.stall}
+            stall={detailStall}
             x={detailView.x}
             y={detailView.y}
             onClose={() => setDetailView(null)}

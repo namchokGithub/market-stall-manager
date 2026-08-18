@@ -1,9 +1,9 @@
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { Stall } from '../../types/stall'
+import type { DisplayStall } from '../../types/stall'
 
 export interface StallDetailPopupProps {
-  stall: Stall
+  stall: DisplayStall
   x: number
   y: number
   onClose: () => void

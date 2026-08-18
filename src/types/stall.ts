@@ -20,9 +20,12 @@ export interface Stall {
   y: number
   width: number
   height: number
-  status?: 'vacant' | 'occupied'
   category?: string
+  label?: string
+}
+
+export interface DisplayStall extends Stall {
+  status?: 'vacant' | 'occupied'
   renterName?: string
   contact?: string
-  label?: string
 }

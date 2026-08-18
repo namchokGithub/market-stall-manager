@@ -13,21 +13,11 @@ const ORIGIN_X = 40
 const ORIGIN_Y = 40
 
 const CATEGORIES = ['Clothing', 'Food & Beverage', 'Handicrafts', 'Electronics', 'Fresh Produce', 'Accessories']
-const RENTERS = [
-  { name: 'Somchai Boonmee', contact: '081-234-5678' },
-  { name: 'Nittaya Srisawat', contact: '089-876-5432' },
-  { name: 'Preecha Thongdee', contact: '062-345-6789' },
-  { name: 'Ratana Chaiyaporn', contact: '095-123-4567' },
-  { name: 'Wichai Suksawat', contact: '087-654-3210' },
-  { name: 'Malee Rungrueang', contact: '090-111-2233' },
-]
 
 function buildRow(prefix: string, rowIndex: number): Stall[] {
   return Array.from({ length: ROW_CAPACITY }, (_, i) => {
     const code = `${prefix}${String(i + 1).padStart(2, '0')}`
     const globalIndex = rowIndex * ROW_CAPACITY + i
-    const vacant = globalIndex % 5 === 4
-    const renter = RENTERS[globalIndex % RENTERS.length]
     return {
       id: code.toLowerCase(),
       kind: 'stall' as const,
@@ -36,18 +26,12 @@ function buildRow(prefix: string, rowIndex: number): Stall[] {
       y: ORIGIN_Y + rowIndex * (STALL_HEIGHT + GAP_Y),
       width: STALL_WIDTH,
       height: STALL_HEIGHT,
-      status: vacant ? ('vacant' as const) : ('occupied' as const),
       category: CATEGORIES[globalIndex % CATEGORIES.length],
-      ...(vacant ? {} : { renterName: renter.name, contact: renter.contact }),
     }
   })
 }
 
-export const mockStalls: Stall[] = [
-  ...buildRow('A', 0),
-  ...buildRow('B', 1),
-  ...buildRow('C', 2),
-]
+export const mockStalls: Stall[] = [...buildRow('A', 0), ...buildRow('B', 1), ...buildRow('C', 2)]
 
 export function nextStallCode(items: Stall[], rowCapacity: number = ROW_CAPACITY): string {
   const stalls = items.filter((s) => s.kind === 'stall')

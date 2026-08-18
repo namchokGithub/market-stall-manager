@@ -2,10 +2,17 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadedMarketMapPage } from "./LoadedMarketMapPage";
 import { loadMarketState } from "../../data/marketDoc";
+import { listBookings } from "../../data/bookingsRepo";
 import type { MapState } from "../../types/marketState";
+import type { Booking } from "../../types/booking";
+
+interface LoadedData {
+  mapState: MapState;
+  bookings: Booking[];
+}
 
 export function MarketMapPage() {
-  const [loadedState, setLoadedState] = useState<MapState | null>(null);
+  const [loadedData, setLoadedData] = useState<LoadedData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
 
@@ -13,8 +20,11 @@ export function MarketMapPage() {
     setIsLoadingInitial(true);
     setLoadError(null);
     try {
-      const result = await loadMarketState();
-      setLoadedState(result);
+      const [mapState, bookings] = await Promise.all([
+        loadMarketState(),
+        listBookings(),
+      ]);
+      setLoadedData({ mapState, bookings });
     } catch (err) {
       setLoadError(
         err instanceof Error ? err.message : "Failed to load market map",
@@ -47,9 +57,14 @@ export function MarketMapPage() {
     );
   }
 
-  if (!loadedState) {
+  if (!loadedData) {
     return null;
   }
 
-  return <LoadedMarketMapPage initialState={loadedState} />;
+  return (
+    <LoadedMarketMapPage
+      initialState={loadedData.mapState}
+      initialBookings={loadedData.bookings}
+    />
+  );
 }

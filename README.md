@@ -107,6 +107,8 @@ src/
     firebase.ts              # initializeApp + exported auth/db singletons (Firestore initialized with
                               #   ignoreUndefinedProperties: true — see "Data model" below)
     utils.ts                 # shadcn's cn() helper
+    dates.ts                 # todayIso/addDays/diffDays/formatDisplayDate — ISO yyyy-mm-dd date helpers
+                              #   shared by the Booking page and bookingOccupancy.ts
   routes/
     AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar (signed-in email, sign-out) + <Outlet/>
     LoginPage.tsx            # email/password sign-in, forgot-password; no self-registration
@@ -126,6 +128,14 @@ src/
                               #   background-image cover-fit rendering
     StallShape.tsx            # stall, editable Text, or generic icon-in-a-box element
     StallDetailPopup.tsx       # View-Mode-only click popup: status/category/renter/contact
+  components/booking/
+    LoadedBookingPage.tsx    # owns all Booking-page state once loaded: bookings list, refetch after
+                              #   create/cancel, which dialog (if any) is open
+    BookingTimeline.tsx       # stall x date grid (windowDays-wide, paged via onPrev/onNext), renders
+                              #   each Booking as a bar; clicking an empty cell opens the create dialog,
+                              #   clicking a bar opens the detail/cancel dialog
+    BookingFormDialog.tsx     # create-booking dialog: stall + date-range picker, calls createBooking
+    BookingDetailDialog.tsx   # read-only booking detail + Cancel button, calls cancelBooking
   state/useMapHistory.ts      # generic undo/redo hook, snapshots a whole T (here: MapState)
   data/
     elementTypes.ts            # type/category/icon/color/default-size source of truth
@@ -133,6 +143,11 @@ src/
                                 #   with runtime validation of data read back before it reaches Konva
     mockStalls.ts               # DEFAULT_MARKET, mockStalls, nextStallCode, ROW_CAPACITY — used only as the
                                 #   seed when markets/default doesn't exist yet
+    bookingsRepo.ts              # listBookings/createBooking/cancelBooking — Firestore CRUD for the
+                                 #   `bookings` collection, with overlap-conflict checking on create
+    bookingOccupancy.ts          # activeBookingsByStallId/withOccupancy — derives each Stall's
+                                 #   status/renterName/contact from today's active bookings, producing
+                                 #   the render-only DisplayStall[] the Market Map consumes
   types/
     stall.ts                  # Stall data used for every placed map element
     market.ts                 # MarketLayout

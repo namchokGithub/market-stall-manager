@@ -1,7 +1,7 @@
 import { Circle, Group, Path, Rect, Text } from 'react-konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import { ELEMENT_TYPES } from '../../data/elementTypes'
-import type { ElementType, Stall } from '../../types/stall'
+import type { ElementType, DisplayStall } from '../../types/stall'
 
 type IconPart =
   | { type: 'path'; data: string }
@@ -42,14 +42,14 @@ const ICON_PARTS: Partial<Record<ElementType, IconPart[]>> = {
 }
 
 interface StallShapeProps {
-  stall: Stall
+  stall: DisplayStall
   selected: boolean
   draggable: boolean
   dragBoundFunc: (pos: { x: number; y: number }) => { x: number; y: number }
   onSelect: () => void
   onDragStart: () => void
   onDragEnd: (x: number, y: number) => void
-  onTextEdit: (stall: Stall) => void
+  onTextEdit: (stall: DisplayStall) => void
 }
 
 export function StallShape({ stall, selected, draggable, dragBoundFunc, onSelect, onDragStart, onDragEnd, onTextEdit }: StallShapeProps) {

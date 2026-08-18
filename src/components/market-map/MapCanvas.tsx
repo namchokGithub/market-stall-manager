@@ -2,7 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import { Stage, Layer, Rect, Image as KonvaImage, Group } from 'react-konva'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import type { Stall } from '../../types/stall'
+import type { DisplayStall } from '../../types/stall'
 import type { MarketLayout } from '../../types/market'
 import { StallShape } from './StallShape'
 
@@ -23,7 +23,7 @@ interface StallResizeHandle {
   anchorY: number
 }
 
-function stallResizeHandles(stall: Stall): StallResizeHandle[] {
+function stallResizeHandles(stall: DisplayStall): StallResizeHandle[] {
   const left = stall.x
   const right = stall.x + stall.width
   const top = stall.y
@@ -44,12 +44,12 @@ export interface MapCanvasHandle {
 
 interface MapCanvasProps {
   market: MarketLayout
-  stalls: Stall[]
+  stalls: DisplayStall[]
   editable: boolean
   selectedId: string | null
   onSelect: (id: string | null) => void
   onStallDragEnd: (id: string, x: number, y: number) => void
-  onStallClick: (stall: Stall, screenPos: { x: number; y: number }) => void
+  onStallClick: (stall: DisplayStall, screenPos: { x: number; y: number }) => void
   onStallResize: (id: string, next: { x: number; y: number; width: number; height: number }) => void
   onTextLabelChange: (id: string, label: string) => void
   onMarketResize: (nextMarket: MarketLayout) => void
@@ -102,7 +102,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   const [isResizingStall, setIsResizingStall] = useState(false)
   const [hasManualView, setHasManualView] = useState(false)
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null)
-  const [editingText, setEditingText] = useState<{ stall: Stall; value: string } | null>(null)
+  const [editingText, setEditingText] = useState<{ stall: DisplayStall; value: string } | null>(null)
 
   useEffect(() => {
     const el = containerRef.current
@@ -217,7 +217,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
       ? { min: anchor + MIN_STALL_SIZE, max: marketMax }
       : { min: 0, max: anchor - MIN_STALL_SIZE }
 
-  const handleStallResizeDragEnd = (stall: Stall, handle: StallResizeHandle) => (
+  const handleStallResizeDragEnd = (stall: DisplayStall, handle: StallResizeHandle) => (
     e: KonvaEventObject<DragEvent>,
   ) => {
     setIsResizingStall(false)
