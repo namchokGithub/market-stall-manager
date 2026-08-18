@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { addDays, todayIso } from '../../lib/dates'
 import { BookingTimeline } from './BookingTimeline'
 import { BookingFormDialog } from './BookingFormDialog'
+import { BookingDetailDialog } from './BookingDetailDialog'
 import { listBookings } from '../../data/bookingsRepo'
 import type { Stall } from '../../types/stall'
 import type { Booking } from '../../types/booking'
@@ -17,10 +18,13 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
   const [bookings, setBookings] = useState<Booking[]>(initialBookings)
   const [windowStart, setWindowStart] = useState(todayIso())
   const [formState, setFormState] = useState<{ stallId: string; date: string } | null>(null)
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
 
   const refetchBookings = async () => {
     setBookings(await listBookings())
   }
+
+  const selectedStallCode = stalls.find((s) => s.id === selectedBooking?.stallId)?.code ?? ''
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -32,7 +36,7 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
         onPrev={() => setWindowStart((d) => addDays(d, -7))}
         onNext={() => setWindowStart((d) => addDays(d, 7))}
         onCellClick={(stallId, date) => setFormState({ stallId, date })}
-        onBarClick={() => {}}
+        onBarClick={(booking) => setSelectedBooking(booking)}
       />
 
       {formState && (
@@ -43,6 +47,18 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
           onClose={() => setFormState(null)}
           onCreated={() => {
             setFormState(null)
+            refetchBookings()
+          }}
+        />
+      )}
+
+      {selectedBooking && (
+        <BookingDetailDialog
+          booking={selectedBooking}
+          stallCode={selectedStallCode}
+          onClose={() => setSelectedBooking(null)}
+          onCancelled={() => {
+            setSelectedBooking(null)
             refetchBookings()
           }}
         />
