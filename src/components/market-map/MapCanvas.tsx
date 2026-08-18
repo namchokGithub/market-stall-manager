@@ -134,7 +134,6 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
       return
     }
     const img = new window.Image()
-    img.crossOrigin = 'anonymous'
     img.onload = () => setBgImage(img)
     img.onerror = () => setBgImage(null)
     img.src = url
