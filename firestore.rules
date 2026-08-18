@@ -15,6 +15,12 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    match /bookings/{bookingId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if false;
+    }
+
     match /admins/{adminId} {
       allow get: if signedIn() && request.auth.uid == adminId;
       allow list, create, update, delete: if false;
