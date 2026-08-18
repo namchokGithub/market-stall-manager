@@ -22,6 +22,8 @@ export interface EditToolsPanelProps {
   hasSelection: boolean;
   backgroundImageUrl?: string;
   backgroundTint: number;
+  isSaving: boolean;
+  saveError: string | null;
   onUndo: () => void;
   onRedo: () => void;
   onAddElement: (type: ElementType) => void;
@@ -38,6 +40,8 @@ export function EditToolsPanel({
   hasSelection,
   backgroundImageUrl,
   backgroundTint,
+  isSaving,
+  saveError,
   onUndo,
   onRedo,
   onAddElement,
@@ -164,9 +168,16 @@ export function EditToolsPanel({
 
       <div className="my-1 h-px bg-slate-200" />
 
-      <Button variant="default" className="justify-start" onClick={onSave}>
+      {saveError && (
+        <p className="px-1 text-xs text-red-600">{saveError}</p>
+      )}
+      <Button
+        variant="default"
+        className="justify-start"
+        disabled={isSaving}
+        onClick={onSave}>
         <Save className="mr-2 h-4 w-4" />
-        Save
+        {isSaving ? "Saving…" : "Save"}
       </Button>
       <Button variant="outline" className="justify-start" onClick={onCancel}>
         <X className="mr-2 h-4 w-4" />

@@ -1,225 +1,55 @@
-import { useRef, useState } from "react";
-import { MapCanvas, type MapCanvasHandle } from "./MapCanvas";
-import { Toolbar } from "./Toolbar";
-import { EditToolsPanel } from "./EditToolsPanel";
-import { StallDetailPopup } from "./StallDetailPopup";
-import { useMapHistory } from "../../state/useMapHistory";
-import {
-  DEFAULT_MARKET,
-  mockStalls,
-  nextStallCode,
-} from "../../data/mockStalls";
-import { ELEMENT_TYPES } from "../../data/elementTypes";
-import type { ElementType, Stall } from "../../types/stall";
-import type { MarketLayout } from "../../types/market";
-
-interface MapState {
-  market: MarketLayout;
-  stalls: Stall[];
-}
-
-const NEW_ELEMENT_ANCHOR = { x: 40, y: 460 };
-
-function clampAnchor(
-  anchor: { x: number; y: number },
-  size: { width: number; height: number },
-  market: MarketLayout,
-) {
-  return {
-    x: Math.min(Math.max(anchor.x, 0), Math.max(market.width - size.width, 0)),
-    y: Math.min(
-      Math.max(anchor.y, 0),
-      Math.max(market.height - size.height, 0),
-    ),
-  };
-}
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { LoadedMarketMapPage } from "./LoadedMarketMapPage";
+import { loadMarketState } from "../../data/marketDoc";
+import type { MapState } from "../../types/marketState";
 
 export function MarketMapPage() {
-  const [savedState, setSavedState] = useState<MapState>({
-    market: DEFAULT_MARKET,
-    stalls: mockStalls,
-  });
-  const [mode, setMode] = useState<"view" | "edit">("view");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [zoomPercent, setZoomPercent] = useState(100);
-  const [detailView, setDetailView] = useState<{
-    stall: Stall;
-    x: number;
-    y: number;
-  } | null>(null);
-  const history = useMapHistory<MapState>(savedState);
-  const canvasRef = useRef<MapCanvasHandle>(null);
+  const [loadedState, setLoadedState] = useState<MapState | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
 
-  const draftState = history.present;
-  const { market, stalls } = mode === "edit" ? draftState : savedState;
-
-  const handleEnterEdit = () => {
-    history.reset(savedState);
-    setSelectedId(null);
-    setDetailView(null);
-    setMode("edit");
+  const load = async () => {
+    setIsLoadingInitial(true);
+    setLoadError(null);
+    try {
+      const result = await loadMarketState();
+      setLoadedState(result);
+    } catch (err) {
+      setLoadError(
+        err instanceof Error ? err.message : "Failed to load market map",
+      );
+    } finally {
+      setIsLoadingInitial(false);
+    }
   };
 
-  const handleStallClick = (
-    stall: Stall,
-    screenPos: { x: number; y: number },
-  ) => {
-    if (mode !== "view" || stall.kind !== "stall") return;
-    setDetailView({ stall, x: screenPos.x, y: screenPos.y });
-  };
+  useEffect(() => {
+    load();
+  }, []);
 
-  const handleAddElement = (type: ElementType) => {
-    const info = ELEMENT_TYPES[type];
-    const anchor = clampAnchor(
-      NEW_ELEMENT_ANCHOR,
-      info.defaultSize,
-      draftState.market,
-    );
-    const newElement: Stall = {
-      id: `${type}-${crypto.randomUUID()}`,
-      kind: type,
-      code: type === "stall" ? nextStallCode(draftState.stalls) : "",
-      x: anchor.x,
-      y: anchor.y,
-      ...info.defaultSize,
-    };
-    history.commit({
-      market: draftState.market,
-      stalls: [...draftState.stalls, newElement],
-    });
-    setSelectedId(newElement.id);
-  };
-
-  const handleDeleteStall = () => {
-    if (!selectedId) return;
-    history.commit({
-      market: draftState.market,
-      stalls: draftState.stalls.filter((s) => s.id !== selectedId),
-    });
-    setSelectedId(null);
-  };
-
-  const handleStallDragEnd = (id: string, x: number, y: number) => {
-    history.commit({
-      market: draftState.market,
-      stalls: draftState.stalls.map((s) => (s.id === id ? { ...s, x, y } : s)),
-    });
-  };
-
-  const handleMarketResize = (nextMarket: MarketLayout) => {
-    history.commit({ market: nextMarket, stalls: draftState.stalls });
-  };
-
-  const handleBackgroundImageChange = (url: string) => {
-    history.commit({
-      market: { ...draftState.market, backgroundImageUrl: url || undefined },
-      stalls: draftState.stalls,
-    });
-  };
-
-  const handleBackgroundTintChange = (backgroundTint: number) => {
-    history.commit({
-      market: {
-        ...draftState.market,
-        backgroundTint: Math.min(Math.max(backgroundTint, 0), 100),
-      },
-      stalls: draftState.stalls,
-    });
-  };
-
-  const handleStallResize = (
-    id: string,
-    next: { x: number; y: number; width: number; height: number },
-  ) => {
-    history.commit({
-      market: draftState.market,
-      stalls: draftState.stalls.map((s) =>
-        s.id === id ? { ...s, ...next } : s,
-      ),
-    });
-  };
-
-  const handleTextLabelChange = (id: string, label: string) => {
-    history.commit({
-      market: draftState.market,
-      stalls: draftState.stalls.map((s) => (s.id === id ? { ...s, label } : s)),
-    });
-  };
-
-  const handleSave = () => {
-    setSavedState(draftState);
-    console.log(
-      JSON.stringify(
-        { market: draftState.market, stalls: draftState.stalls },
-        null,
-        2,
-      ),
-    );
-    setSelectedId(null);
-    setDetailView(null);
-    setMode("view");
-  };
-
-  const handleCancel = () => {
-    setSelectedId(null);
-    setDetailView(null);
-    setMode("view");
-  };
-
-  return (
-    <div className="flex h-full w-full flex-col">
-      <Toolbar
-        mode={mode}
-        zoomPercent={zoomPercent}
-        onEnterEdit={handleEnterEdit}
-        onZoomOut={() => canvasRef.current?.zoomOut()}
-        onZoomIn={() => canvasRef.current?.zoomIn()}
-        onResetView={() => canvasRef.current?.resetView()}
-      />
-      <div className="relative flex-1">
-        <MapCanvas
-          ref={canvasRef}
-          market={market}
-          stalls={stalls}
-          editable={mode === "edit"}
-          selectedId={selectedId}
-          onSelect={(id) => {
-            setSelectedId(id);
-            if (id === null) setDetailView(null);
-          }}
-          onStallDragEnd={handleStallDragEnd}
-          onStallClick={handleStallClick}
-          onStallResize={handleStallResize}
-          onTextLabelChange={handleTextLabelChange}
-          onMarketResize={handleMarketResize}
-          onScaleChange={setZoomPercent}
-        />
-        {mode === "edit" && (
-          <EditToolsPanel
-            canUndo={history.canUndo}
-            canRedo={history.canRedo}
-            hasSelection={stalls.some((s) => s.id === selectedId)}
-            backgroundImageUrl={draftState.market.backgroundImageUrl}
-            backgroundTint={draftState.market.backgroundTint}
-            onUndo={history.undo}
-            onRedo={history.redo}
-            onAddElement={handleAddElement}
-            onDeleteStall={handleDeleteStall}
-            onBackgroundImageChange={handleBackgroundImageChange}
-            onBackgroundTintChange={handleBackgroundTintChange}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
-        )}
-        {mode === "view" && detailView && (
-          <StallDetailPopup
-            stall={detailView.stall}
-            x={detailView.x}
-            y={detailView.y}
-            onClose={() => setDetailView(null)}
-          />
-        )}
+  if (isLoadingInitial) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <p className="text-sm text-slate-500">Loading market map…</p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3">
+        <p className="text-sm text-red-600">{loadError}</p>
+        <Button variant="outline" onClick={() => load()}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (!loadedState) {
+    return null;
+  }
+
+  return <LoadedMarketMapPage initialState={loadedState} />;
 }
