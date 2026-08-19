@@ -8,31 +8,34 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { createBooking } from "../../data/bookingsRepo";
+import { createBooking, updateBooking } from "../../data/bookingsRepo";
+import type { Booking } from "../../types/booking";
 import type { Stall } from "../../types/stall";
 
 interface BookingFormDialogProps {
   stalls: Stall[];
   initialStallId: string;
   initialDate: string;
+  booking?: Booking;
   onClose: () => void;
-  onCreated: () => void;
+  onSaved: () => void;
 }
 
 export function BookingFormDialog({
   stalls,
   initialStallId,
   initialDate,
+  booking,
   onClose,
-  onCreated,
+  onSaved,
 }: BookingFormDialogProps) {
-  const [stallId, setStallId] = useState(initialStallId);
-  const [renterName, setRenterName] = useState("");
-  const [contact, setContact] = useState("");
-  const [totalPrice, setTotalPrice] = useState("");
-  const [startDate, setStartDate] = useState(initialDate);
-  const [endDate, setEndDate] = useState(initialDate);
-  const [notes, setNotes] = useState("");
+  const [stallId, setStallId] = useState(booking?.stallId ?? initialStallId);
+  const [renterName, setRenterName] = useState(booking?.renterName ?? "");
+  const [contact, setContact] = useState(booking?.contact ?? "");
+  const [totalPrice, setTotalPrice] = useState(booking?.totalPrice?.toString() ?? "");
+  const [startDate, setStartDate] = useState(booking?.startDate ?? initialDate);
+  const [endDate, setEndDate] = useState(booking?.endDate ?? initialDate);
+  const [notes, setNotes] = useState(booking?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,7 +71,7 @@ export function BookingFormDialog({
 
     setIsSubmitting(true);
     try {
-      await createBooking({
+      const input = {
         stallId,
         renterName: trimmedRenterName,
         contact: contact || undefined,
@@ -76,10 +79,15 @@ export function BookingFormDialog({
         startDate,
         endDate,
         notes: notes || undefined,
-      });
-      onCreated();
+      };
+      if (booking) {
+        await updateBooking(booking.id, input);
+      } else {
+        await createBooking(input);
+      }
+      onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create booking");
+      setError(err instanceof Error ? err.message : "Failed to save booking");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,9 +97,9 @@ export function BookingFormDialog({
     <Dialog open onOpenChange={(next) => !next && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New booking</DialogTitle>
+          <DialogTitle>{booking ? "Edit booking" : "New booking"}</DialogTitle>
           <DialogDescription>
-            Reserve a stall for a date range.
+            {booking ? "Update this booking's details." : "Reserve a stall for a date range."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} noValidate className="space-y-3">
@@ -215,7 +223,7 @@ export function BookingFormDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving…" : "Create booking"}
+              {isSubmitting ? "Saving…" : booking ? "Save changes" : "Create booking"}
             </Button>
           </DialogFooter>
         </form>

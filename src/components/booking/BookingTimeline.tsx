@@ -1,11 +1,12 @@
+import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { addDays, diffDays, formatDisplayDate } from '../../lib/dates'
 import type { Stall } from '../../types/stall'
 import type { Booking } from '../../types/booking'
 
-const CELL_WIDTH = 40
-const ROW_LABEL_WIDTH = 140
+const MIN_CELL_WIDTH = 48
+const ROW_LABEL_WIDTH = 96
 const ROW_HEIGHT = 40
 
 interface BookingTimelineProps {
@@ -29,13 +30,29 @@ export function BookingTimeline({
   onCellClick,
   onBarClick,
 }: BookingTimelineProps) {
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const [timelineWidth, setTimelineWidth] = useState(0)
   const windowEnd = addDays(windowStart, windowDays - 1)
   const dates = Array.from({ length: windowDays }, (_, i) => addDays(windowStart, i))
   const confirmedBookings = bookings.filter((b) => b.status === 'confirmed')
+  const contentWidth = Math.max(timelineWidth, ROW_LABEL_WIDTH + dates.length * MIN_CELL_WIDTH)
+  const cellWidth = (contentWidth - ROW_LABEL_WIDTH) / dates.length
+
+  useEffect(() => {
+    const element = timelineRef.current
+    if (!element) return
+
+    const updateWidth = () => setTimelineWidth(element.clientWidth)
+    updateWidth()
+
+    const observer = new ResizeObserver(updateWidth)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-2">
+    <div ref={timelineRef} className="flex h-full w-full min-w-0 flex-col overflow-hidden">
+      <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 sm:px-4">
         <Button variant="outline" size="sm" onClick={onPrev} aria-label="Previous week">
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -48,15 +65,18 @@ export function BookingTimeline({
       </div>
 
       <div className="flex-1 overflow-auto">
-        <div style={{ width: ROW_LABEL_WIDTH + dates.length * CELL_WIDTH }}>
+        <div style={{ width: contentWidth, minWidth: '100%' }}>
           <div className="flex border-b border-slate-200 bg-slate-50">
-            <div style={{ width: ROW_LABEL_WIDTH }} className="shrink-0 px-3 py-2 text-xs font-semibold text-slate-500">
+            <div
+              style={{ width: ROW_LABEL_WIDTH }}
+              className="sticky left-0 z-20 shrink-0 border-r border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500"
+            >
               Stall
             </div>
             {dates.map((date) => (
               <div
                 key={date}
-                style={{ width: CELL_WIDTH }}
+                style={{ width: cellWidth }}
                 className="shrink-0 border-l border-slate-100 py-2 text-center text-[10px] text-slate-500"
               >
                 {formatDisplayDate(date)}
@@ -66,7 +86,10 @@ export function BookingTimeline({
 
           {stalls.map((stall) => (
             <div key={stall.id} className="relative flex border-b border-slate-100" style={{ height: ROW_HEIGHT }}>
-              <div style={{ width: ROW_LABEL_WIDTH }} className="shrink-0 truncate px-3 py-2 text-sm text-slate-700">
+              <div
+                style={{ width: ROW_LABEL_WIDTH }}
+                className="sticky left-0 z-10 shrink-0 truncate border-r border-slate-100 bg-white px-3 py-2 text-sm text-slate-700"
+              >
                 {stall.code}
               </div>
               <div className="relative flex-1">
@@ -75,7 +98,7 @@ export function BookingTimeline({
                     key={date}
                     type="button"
                     onClick={() => onCellClick(stall.id, date)}
-                    style={{ position: 'absolute', left: i * CELL_WIDTH, width: CELL_WIDTH, top: 0, height: ROW_HEIGHT }}
+                    style={{ position: 'absolute', left: i * cellWidth, width: cellWidth, top: 0, height: ROW_HEIGHT }}
                     className="border-l border-slate-100 hover:bg-slate-50"
                   />
                 ))}
@@ -91,8 +114,8 @@ export function BookingTimeline({
                         onClick={() => onBarClick(booking)}
                         style={{
                           position: 'absolute',
-                          left: startOffset * CELL_WIDTH + 2,
-                          width: (endOffset - startOffset + 1) * CELL_WIDTH - 4,
+                          left: startOffset * cellWidth + 2,
+                          width: (endOffset - startOffset + 1) * cellWidth - 4,
                           top: 4,
                           height: ROW_HEIGHT - 8,
                         }}

@@ -19,6 +19,7 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
   const [windowStart, setWindowStart] = useState(todayIso())
   const [formState, setFormState] = useState<{ stallId: string; date: string } | null>(null)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
 
   const refetchBookings = async () => {
     try {
@@ -49,8 +50,22 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
           initialStallId={formState.stallId}
           initialDate={formState.date}
           onClose={() => setFormState(null)}
-          onCreated={async () => {
+          onSaved={async () => {
             setFormState(null)
+            await refetchBookings()
+          }}
+        />
+      )}
+
+      {editingBooking && (
+        <BookingFormDialog
+          stalls={stalls}
+          initialStallId={editingBooking.stallId}
+          initialDate={editingBooking.startDate}
+          booking={editingBooking}
+          onClose={() => setEditingBooking(null)}
+          onSaved={async () => {
+            setEditingBooking(null)
             await refetchBookings()
           }}
         />
@@ -61,6 +76,10 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
           booking={selectedBooking}
           stallCode={selectedStallCode}
           onClose={() => setSelectedBooking(null)}
+          onEdit={() => {
+            setEditingBooking(selectedBooking)
+            setSelectedBooking(null)
+          }}
           onCancelled={async () => {
             setSelectedBooking(null)
             await refetchBookings()

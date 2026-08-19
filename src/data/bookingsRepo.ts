@@ -45,15 +45,7 @@ export async function listBookings(): Promise<Booking[]> {
 
 export async function createBooking(input: NewBookingInput): Promise<Booking> {
   const existing = await listBookings()
-  const conflict = existing.some(
-    (b) =>
-      b.status === 'confirmed' &&
-      b.stallId === input.stallId &&
-      rangesOverlap(b.startDate, b.endDate, input.startDate, input.endDate),
-  )
-  if (conflict) {
-    throw new Error('This stall is already booked for part of that date range.')
-  }
+  assertNoBookingConflict(existing, input)
 
   const booking: Omit<Booking, 'id'> = {
     ...input,
@@ -66,4 +58,23 @@ export async function createBooking(input: NewBookingInput): Promise<Booking> {
 
 export async function cancelBooking(id: string): Promise<void> {
   await updateDoc(doc(db, BOOKINGS_COLLECTION, id), { status: 'cancelled' })
+}
+
+export async function updateBooking(id: string, input: NewBookingInput): Promise<void> {
+  const existing = await listBookings()
+  assertNoBookingConflict(existing, input, id)
+  await updateDoc(doc(db, BOOKINGS_COLLECTION, id), input)
+}
+
+function assertNoBookingConflict(bookings: Booking[], input: NewBookingInput, excludedId?: string): void {
+  const conflict = bookings.some(
+    (booking) =>
+      booking.id !== excludedId &&
+      booking.status === 'confirmed' &&
+      booking.stallId === input.stallId &&
+      rangesOverlap(booking.startDate, booking.endDate, input.startDate, input.endDate),
+  )
+  if (conflict) {
+    throw new Error('This stall is already booked for part of that date range.')
+  }
 }

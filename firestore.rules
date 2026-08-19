@@ -25,9 +25,31 @@ service cloud.firestore {
         && request.resource.data.endDate is string
         && request.resource.data.startDate <= request.resource.data.endDate;
       allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && resource.data.status == 'confirmed'
-        && request.resource.data.status == 'cancelled';
+        && (
+          (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+            && request.resource.data.status == 'cancelled'
+          )
+          || (
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              'stallId',
+              'renterName',
+              'contact',
+              'totalPrice',
+              'startDate',
+              'endDate',
+              'notes'
+            ])
+            && request.resource.data.status == 'confirmed'
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.stallId is string
+            && request.resource.data.renterName is string
+            && request.resource.data.startDate is string
+            && request.resource.data.endDate is string
+            && request.resource.data.startDate <= request.resource.data.endDate
+          )
+        );
       allow delete: if false;
     }
 
