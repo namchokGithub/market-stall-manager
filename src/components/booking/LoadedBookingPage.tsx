@@ -40,6 +40,7 @@ export function LoadedBookingPage({ stalls, initialBookings }: LoadedBookingPage
         windowDays={WINDOW_DAYS}
         onPrev={() => setWindowStart((d) => addDays(d, -7))}
         onNext={() => setWindowStart((d) => addDays(d, 7))}
+        onWindowStartChange={setWindowStart}
         onCellClick={(stallId, date) => setFormState({ stallId, date })}
         onBarClick={(booking) => setSelectedBooking(booking)}
       />

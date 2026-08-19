@@ -149,7 +149,8 @@ src/
   components/booking/
     LoadedBookingPage.tsx    # owns all Booking-page state once loaded: bookings list, refetch after
                               #   create/cancel, which dialog (if any) is open
-    BookingTimeline.tsx       # stall x date grid (windowDays-wide, paged via onPrev/onNext), renders
+    BookingTimeline.tsx       # stall x date grid (windowDays-wide, paged weekly or jumped via a
+                              #   calendar start-date picker), renders
                               #   each Booking as a bar; clicking an empty cell opens the create dialog,
                               #   clicking a bar opens the detail/cancel dialog
     BookingFormDialog.tsx     # create-booking dialog: stall + date-range picker, calls createBooking
@@ -291,6 +292,12 @@ why market resize behaves differently from stall resize (which has real
   `#3b82f6` in dark mode. Konva map drawing colors, occupied badges,
   booking bars, and the already dark-aware trend chart intentionally keep
   their own data/visual colors.
+
+## Booking timeline navigation
+
+The Booking timeline shows a 14-day window. Its previous/next buttons shift
+that window by one week, while the calendar button selects any date as the
+new window start — useful for jumping directly to a distant booking period.
 
 ## Known gaps / things a future pass should look at
 

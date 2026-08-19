@@ -129,7 +129,9 @@ the way both of the above were verified.
   variants are deliberately out of scope for that pass.
 - **Booking now exists** — full design and implementation pass, see
   `docs/superpowers/specs/2026-08-18-booking-design.md` (spec) and
-  `docs/superpowers/plans/2026-08-18-booking.md` (plan). `Stall.status`/
+  `docs/superpowers/plans/2026-08-18-booking.md` (plan). Its 14-day timeline
+  can be shifted by week or jumped directly to any start date with the
+  calendar control. `Stall.status`/
   `renterName`/`contact` are no longer persisted fields on `Stall` itself;
   they're derived per-render from `bookings` via
   `src/data/bookingOccupancy.ts`'s `withOccupancy`, and carried on the

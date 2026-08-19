@@ -36,7 +36,10 @@ export default {
   				DEFAULT: 'var(--accent)',
   				foreground: 'var(--accent-foreground)'
   			},
-  			destructive: 'var(--destructive)',
+			destructive: {
+				DEFAULT: 'var(--destructive)',
+				foreground: 'var(--destructive-foreground)'
+			},
   			border: 'var(--border)',
   			input: 'var(--input)',
 			ring: 'rgb(var(--ring) / <alpha-value>)',

@@ -82,11 +82,12 @@ export function BookingDetailDialog({
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          <Button variant="secondary" onClick={onEdit}>
-            Edit
+          <Button onClick={onEdit}>
+            Edit booking
           </Button>
           <Button
-            variant="destructive"
+            variant="outline"
+            className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={handleCancel}
             disabled={isCancelling}>
             {isCancelling ? "Cancelling…" : "Cancel booking"}

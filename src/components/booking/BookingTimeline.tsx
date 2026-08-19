@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { addDays, diffDays, formatDisplayDate } from '../../lib/dates'
 import type { Stall } from '../../types/stall'
@@ -16,6 +16,7 @@ interface BookingTimelineProps {
   windowDays: number
   onPrev: () => void
   onNext: () => void
+  onWindowStartChange: (date: string) => void
   onCellClick: (stallId: string, date: string) => void
   onBarClick: (booking: Booking) => void
 }
@@ -27,16 +28,30 @@ export function BookingTimeline({
   windowDays,
   onPrev,
   onNext,
+  onWindowStartChange,
   onCellClick,
   onBarClick,
 }: BookingTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
+  const datePickerRef = useRef<HTMLInputElement>(null)
   const [timelineWidth, setTimelineWidth] = useState(0)
   const windowEnd = addDays(windowStart, windowDays - 1)
   const dates = Array.from({ length: windowDays }, (_, i) => addDays(windowStart, i))
   const confirmedBookings = bookings.filter((b) => b.status === 'confirmed')
   const contentWidth = Math.max(timelineWidth, ROW_LABEL_WIDTH + dates.length * MIN_CELL_WIDTH)
   const cellWidth = (contentWidth - ROW_LABEL_WIDTH) / dates.length
+
+  const openDatePicker = () => {
+    const input = datePickerRef.current
+    if (!input) return
+
+    try {
+      input.showPicker()
+    } catch {
+      input.focus()
+      input.click()
+    }
+  }
 
   useEffect(() => {
     const element = timelineRef.current
@@ -52,16 +67,32 @@ export function BookingTimeline({
 
   return (
     <div ref={timelineRef} className="flex h-full w-full min-w-0 flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2 sm:px-4">
-        <Button variant="outline" size="sm" onClick={onPrev} aria-label="Previous week">
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center border-b border-border px-3 py-2 sm:px-4">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onPrev} aria-label="Previous week">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={openDatePicker} aria-label="Choose timeline start date">
+            <CalendarDays className="h-4 w-4" />
+            <span className="hidden sm:inline">Choose date</span>
+          </Button>
+          <input
+            ref={datePickerRef}
+            type="date"
+            value={windowStart}
+            onChange={(event) => onWindowStartChange(event.target.value)}
+            className="sr-only"
+            tabIndex={-1}
+          />
+        </div>
         <span className="text-sm font-medium text-foreground">
           {formatDisplayDate(windowStart)} – {formatDisplayDate(windowEnd)}
         </span>
-        <Button variant="outline" size="sm" onClick={onNext} aria-label="Next week">
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={onNext} aria-label="Next week">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto">
