@@ -3,10 +3,12 @@ import { ReportDateRangeControl } from "./ReportDateRangeControl";
 import { ReportSummaryCards } from "./ReportSummaryCards";
 import { ReportByStallTable } from "./ReportByStallTable";
 import { ReportByRenterTable } from "./ReportByRenterTable";
+import { ReportTrendChart } from "./ReportTrendChart";
 import {
   computeSummary,
   computeByStall,
   computeByRenter,
+  computeTrend,
 } from "../../data/reportStats";
 import {
   presetRange,
@@ -30,6 +32,9 @@ export function LoadedDashboardPage({
   const [range, setRange] = useState<DateRange>(() =>
     presetRange("thisMonth", todayIso()),
   );
+  const [trendMetric, setTrendMetric] = useState<"revenue" | "count">(
+    "revenue",
+  );
 
   const handlePresetChange = (nextPreset: DateRangePreset) => {
     setPreset(nextPreset);
@@ -39,6 +44,7 @@ export function LoadedDashboardPage({
   const summary = computeSummary(bookings, stalls, range);
   const byStall = computeByStall(bookings, stalls, range);
   const byRenter = computeByRenter(bookings, range);
+  const trend = computeTrend(bookings, range);
 
   return (
     <div className="flex h-full w-full flex-col overflow-y-auto">
@@ -49,6 +55,11 @@ export function LoadedDashboardPage({
         onCustomRangeChange={setRange}
       />
       <ReportSummaryCards summary={summary} />
+      <ReportTrendChart
+        points={trend}
+        metric={trendMetric}
+        onMetricChange={setTrendMetric}
+      />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <ReportByStallTable rows={byStall} />
         <ReportByRenterTable rows={byRenter} />
