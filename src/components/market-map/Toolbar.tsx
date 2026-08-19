@@ -1,5 +1,12 @@
-import { Eye, Pencil, ZoomOut, ZoomIn, Maximize } from 'lucide-react'
+import { Download, Eye, Pencil, ZoomOut, ZoomIn, Maximize, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import type { MapExportFormat } from './MapExportRenderer'
 
 export interface ToolbarProps {
   mode: 'view' | 'edit'
@@ -9,6 +16,10 @@ export interface ToolbarProps {
   onZoomOut: () => void
   onZoomIn: () => void
   onResetView: () => void
+  isExporting: boolean
+  exportError: string | null
+  onExport: (format: MapExportFormat) => void
+  onShare: () => void
 }
 
 export function Toolbar({
@@ -19,6 +30,10 @@ export function Toolbar({
   onZoomOut,
   onZoomIn,
   onResetView,
+  isExporting,
+  exportError,
+  onExport,
+  onShare,
 }: ToolbarProps) {
   const isEdit = mode === 'edit'
 
@@ -43,6 +58,29 @@ export function Toolbar({
       <Button variant="ghost" size="icon" onClick={onResetView} aria-label="Reset view">
         <Maximize className="h-4 w-4" />
       </Button>
+
+      <div className="mx-2 h-6 w-px bg-border" />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" disabled={isExporting}>
+            <Download className="mr-1 h-4 w-4" />
+            {isExporting ? 'Exporting…' : 'Export'}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onSelect={() => onExport('png')}>Export as PNG</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onExport('jpeg')}>Export as JPEG</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => onExport('pdf')}>Export as PDF</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {canEdit && (
+        <Button variant="outline" size="sm" disabled={isEdit} onClick={onShare}>
+          <Share2 className="mr-1 h-4 w-4" />
+          Share
+        </Button>
+      )}
+      {exportError && <span role="status" className="text-xs text-destructive">{exportError}</span>}
     </div>
   )
 }

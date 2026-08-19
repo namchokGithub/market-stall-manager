@@ -3,6 +3,8 @@ import { MapCanvas, type MapCanvasHandle } from "./MapCanvas";
 import { Toolbar } from "./Toolbar";
 import { EditToolsPanel } from "./EditToolsPanel";
 import { StallDetailPopup } from "./StallDetailPopup";
+import { MapExportRenderer, type MapExportHandle, type MapExportFormat } from "./MapExportRenderer";
+import { ShareMarketDialog } from "./ShareMarketDialog";
 import { useMapHistory } from "../../state/useMapHistory";
 import { useAuth } from "../../auth/AuthProvider";
 import { nextStallCode } from "../../data/mockStalls";
@@ -52,8 +54,12 @@ export function LoadedMarketMapPage({
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const history = useMapHistory<MapState>(savedState);
   const canvasRef = useRef<MapCanvasHandle>(null);
+  const exportRef = useRef<MapExportHandle>(null);
 
   const draftState = history.present;
   const { market, stalls: rawStalls } = mode === "edit" ? draftState : savedState;
@@ -198,6 +204,19 @@ export function LoadedMarketMapPage({
     setMode("view");
   };
 
+  const handleExport = async (format: MapExportFormat) => {
+    setExportError(null);
+    setIsExporting(true);
+    try {
+      if (!exportRef.current) throw new Error("The market map is not ready to export yet.");
+      await exportRef.current.exportMap(format);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : "Failed to export market map");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col">
       <Toolbar
@@ -208,8 +227,13 @@ export function LoadedMarketMapPage({
         onZoomOut={() => canvasRef.current?.zoomOut()}
         onZoomIn={() => canvasRef.current?.zoomIn()}
         onResetView={() => canvasRef.current?.resetView()}
+        isExporting={isExporting}
+        exportError={exportError}
+        onExport={handleExport}
+        onShare={() => setIsShareDialogOpen(true)}
       />
       <div className="relative flex-1">
+        <MapExportRenderer ref={exportRef} market={market} stalls={stalls} />
         <MapCanvas
           ref={canvasRef}
           market={market}
@@ -256,6 +280,11 @@ export function LoadedMarketMapPage({
             onClose={() => setDetailView(null)}
           />
         )}
+        <ShareMarketDialog
+          state={savedState}
+          open={isShareDialogOpen}
+          onOpenChange={setIsShareDialogOpen}
+        />
       </div>
     </div>
   );

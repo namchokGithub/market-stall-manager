@@ -11,6 +11,11 @@ gates every route, and the market layout persists to a single Firestore
 document. See "Firebase setup" below before running this anywhere but a
 fully-configured environment.
 
+Admins can also publish a layout-only snapshot as a public QR/link. The public
+`#/view/<share-id>` page is deliberately outside the authenticated app shell:
+it has no navbar or toolbar and never loads Booking records or renter/contact
+information.
+
 The app has a persisted light/dark theme toggle. It follows the OS preference
 only on first load, then stores the user's explicit choice locally.
 
@@ -32,6 +37,7 @@ only on first load, then stores the user's explicit choice locally.
   `pnpm dlx shadcn@3.8.5 add <component>`, never `@latest`.
 - lucide-react — all icons, no emoji anywhere (hard rule)
 - konva / react-konva — canvas rendering
+- qrcode.react — client-side QR generation for public map-share links
 - react-router (`react-router`, **not** `react-router-dom` — v7+ unified
   the packages; import `HashRouter`/`Routes`/`Route`/`NavLink`/`Outlet`
   straight from `react-router`). Uses `HashRouter`, not `BrowserRouter` —
@@ -109,7 +115,7 @@ server would).
 
 ```
 src/
-  App.tsx                  # HashRouter + route table (login route + RequireAuth-gated app routes)
+  App.tsx                  # HashRouter + route table (login/public-share routes + RequireAuth-gated app routes)
   main.tsx                  # ReactDOM root; ThemeProvider wraps AuthProvider + <App/>
   auth/
     AuthProvider.tsx         # onAuthStateChanged subscription; exposes useAuth() -> { user, isAdmin, isLoading }
@@ -135,6 +141,7 @@ src/
   components/market-map/
     MarketMapPage.tsx        # loading/error boundary only: loads MapState via marketDoc, then renders
                               #   LoadedMarketMapPage; retry button on load failure
+    PublicMarketMapPage.tsx  # unauthenticated `#/view/:shareId` layout-only map; no AppShell/toolbar
     LoadedMarketMapPage.tsx  # owns all Market Map state once loaded (see below) — undo/redo history,
                               #   save/cancel, all the handlers that used to live directly in MarketMapPage.tsx
     Toolbar.tsx               # always-visible bar: title, mode toggle, zoom controls
@@ -146,6 +153,7 @@ src/
                               #   background-image cover-fit rendering
     StallShape.tsx            # stall, editable Text, or generic icon-in-a-box element
     StallDetailPopup.tsx       # View-Mode-only click popup: status/category/renter/contact
+    ShareMarketDialog.tsx      # admin-only QR/link publisher for a public layout snapshot
   components/booking/
     LoadedBookingPage.tsx    # owns all Booking-page state once loaded: bookings list, refetch after
                               #   create/cancel, which dialog (if any) is open
@@ -173,6 +181,7 @@ src/
     elementTypes.ts            # type/category/icon/color/default-size source of truth
     marketDoc.ts                # loadMarketState/saveMarketState — the one Firestore doc (markets/default),
                                 #   with runtime validation of data read back before it reaches Konva
+    publicMarketShares.ts       # publish/load layout-only public snapshots at publicMarketShares/<UUID>
     mockStalls.ts               # DEFAULT_MARKET, mockStalls, nextStallCode, ROW_CAPACITY — used only as the
                                 #   seed when markets/default doesn't exist yet
     bookingsRepo.ts              # listBookings/createBooking/cancelBooking — Firestore CRUD for the
@@ -190,7 +199,8 @@ src/
   components/ui/              # shadcn Button and DropdownMenu
 ```
 
-Routes: `/login` is public. Everything else (`/` — redirects to
+Routes: `/login` and `/view/:shareId` are public. The latter renders only a
+published layout snapshot and does not fetch Booking data. Everything else (`/` — redirects to
 `/market-map` — plus `/market-map`, `/booking`, `/dashboard`) sits behind
 `RequireAuth`, which renders `AppShell`'s sidebar/top-bar shell only once
 a user is signed in, otherwise redirecting to `/login` and returning them
@@ -295,6 +305,19 @@ why market resize behaves differently from stall resize (which has real
   booking bars, and the already dark-aware trend chart intentionally keep
   their own data/visual colors.
 
+## Market map export (built)
+
+- The Market Map toolbar exports the current map as PNG, JPEG, or PDF. It
+  exports the logical market boundary only, excluding the app shell, toolbar,
+  edit tools, selected-element styling, and resize handles.
+- Exports reflect the current state: unsaved edits are included while in Edit
+  Mode, but exporting never writes to Firestore. PNG/JPEG are 2× resolution
+  (capped at a 4096 px longest edge); PDF embeds a 2× JPEG in an A4 landscape document with a
+  title and export date.
+- A background image URL must permit CORS export. If it does not, the app
+  reports an inline error; use a CORS-enabled URL or remove the image
+  temporarily.
+
 ## Booking timeline navigation
 
 The Booking timeline shows a 14-day window. Its previous/next buttons shift
@@ -348,6 +371,10 @@ brainstorm → design → implementation pass documented here.
 - `docs/superpowers/specs/2026-08-19-theme-system-design.md` — Theme system
   design (persisted light/dark mode and semantic chrome tokens)
 - `docs/superpowers/plans/2026-08-19-theme-system.md` — Theme system
+  implementation plan
+- `docs/superpowers/specs/2026-08-19-market-export-design.md` — Market map
+  export design (PNG, JPEG, PDF)
+- `docs/superpowers/plans/2026-08-19-market-export.md` — Market map export
   implementation plan
 
 Everything else (Market Boundary, resize, bushes, app shell/routing,

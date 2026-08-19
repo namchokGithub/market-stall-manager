@@ -15,6 +15,14 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Public maps are capability links: only a direct get by the unguessable
+    // share ID is permitted. The document has layout data only — bookings and
+    // renter/contact information live elsewhere and are never copied here.
+    match /publicMarketShares/{shareId} {
+      allow get: if resource.data.isPublic == true;
+      allow create, update, delete: if isAdmin();
+    }
+
     match /bookings/{bookingId} {
       allow read: if signedIn();
       allow create: if signedIn()

@@ -125,9 +125,32 @@ the way both of the above were verified.
   `src/index.css` also sets `color-scheme: light` on `:root` and
   `color-scheme: dark` on `.dark`; this is what makes native controls such
   as `<input type="date">` render a matching calendar popup.
+- **Market export is a snapshot, not a screenshot.** `MapExportRenderer`
+  renders `MarketScene` off-screen at the logical market size, then exports
+  PNG/JPEG/PDF through its single `exportMap(format)` interface. This is why
+  pan/zoom, toolbar/UI, selection styling, and resize handles never appear in
+  an export. It uses the current draft in Edit Mode but does not save it.
+  `MapExportRenderer` loads a background image with CORS enabled; a URL that
+  does not permit canvas export produces an inline error rather than a blank
+  file. PDF generation is dynamically imported from `jspdf` to keep its large
+  code out of the initial bundle.
+- **Public market sharing is a separate, layout-only snapshot.** The admin-only
+  Share button creates `publicMarketShares/<crypto.randomUUID()>` with just
+  `{ market, stalls, isPublic: true }`; it never copies Booking records,
+  renter names, or contacts. `#/view/:shareId` is intentionally outside both
+  `RequireAuth` and `AppShell`, so it is a fullscreen map with no navbar or
+  toolbar. Firestore permits a public direct `get` only (no collection list)
+  when `isPublic` is true. Deploy `firestore.rules` before relying on this
+  feature; until an in-app revoke UI exists, revoke a shared link by deleting
+  its `publicMarketShares/<shareId>` document in Firebase Console.
 
 ## What's genuinely unfinished
 
+- **Market export now exists** — see
+  `docs/superpowers/specs/2026-08-19-market-export-design.md` and
+  `docs/superpowers/plans/2026-08-19-market-export.md`. Current formats are
+  PNG, JPEG, and raster-image PDF; configurable paper/output settings, vector
+  PDF/SVG, and multi-page reports are intentionally deferred.
 - **Theme system now exists** — see
   `docs/superpowers/specs/2026-08-19-theme-system-design.md` and
   `docs/superpowers/plans/2026-08-19-theme-system.md`. It changes the

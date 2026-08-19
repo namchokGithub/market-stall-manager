@@ -1,10 +1,10 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
-import { Stage, Layer, Rect, Image as KonvaImage, Group } from 'react-konva'
+import { Stage, Layer, Rect } from 'react-konva'
 import Konva from 'konva'
 import type { KonvaEventObject } from 'konva/lib/Node'
 import type { DisplayStall } from '../../types/stall'
 import type { MarketLayout } from '../../types/market'
-import { StallShape } from './StallShape'
+import { MarketScene } from './MarketScene'
 
 const MIN_SCALE = 0.3
 const MAX_SCALE = 3
@@ -269,85 +269,32 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
         }}
       >
         <Layer>
-          <Rect
-            x={0}
-            y={0}
-            width={market.width}
-            height={market.height}
-            fill={bgImage ? undefined : '#ffffff'}
-            stroke="#475569"
-            strokeWidth={2}
-            listening={false}
+          <MarketScene
+            market={market}
+            stalls={stalls}
+            backgroundImage={bgImage}
+            selectedId={selectedId}
+            draggable={editable}
+            dragBoundFunc={(stall, pos) => ({
+              x: clamp(pos.x, stagePos.x, stagePos.x + (market.width - stall.width) * scale),
+              y: clamp(pos.y, stagePos.y, stagePos.y + (market.height - stall.height) * scale),
+            })}
+            onSelect={(stall) => {
+              if (editable) onSelect(stall.id)
+              onStallClick(stall, {
+                x: stagePos.x + (stall.x + stall.width) * scale + 8,
+                y: stagePos.y + stall.y * scale,
+              })
+            }}
+            onDragStart={() => setIsDraggingStall(true)}
+            onDragEnd={(stall, x, y) => {
+              setIsDraggingStall(false)
+              onStallDragEnd(stall.id, x, y)
+            }}
+            onTextEdit={(textStall) => {
+              if (editable) setEditingText({ stall: textStall, value: textStall.label ?? '' })
+            }}
           />
-          {bgImage &&
-            (() => {
-              const coverScale = Math.max(market.width / bgImage.width, market.height / bgImage.height)
-              const drawWidth = bgImage.width * coverScale
-              const drawHeight = bgImage.height * coverScale
-              return (
-                <Group
-                  clipX={0}
-                  clipY={0}
-                  clipWidth={market.width}
-                  clipHeight={market.height}
-                  listening={false}
-                >
-                  <KonvaImage
-                    image={bgImage}
-                    x={(market.width - drawWidth) / 2}
-                    y={(market.height - drawHeight) / 2}
-                    width={drawWidth}
-                    height={drawHeight}
-                  />
-                </Group>
-              )
-            })()}
-          {bgImage && (
-            <Rect
-              x={0}
-              y={0}
-              width={market.width}
-              height={market.height}
-              fill="#ffffff"
-              opacity={market.backgroundTint / 100}
-              listening={false}
-            />
-          )}
-          {stalls.map((stall) => (
-            <StallShape
-              key={stall.id}
-              stall={stall}
-              selected={stall.id === selectedId}
-              draggable={editable}
-              dragBoundFunc={(pos) => ({
-                x: clamp(
-                  pos.x,
-                  stagePos.x,
-                  stagePos.x + (market.width - stall.width) * scale,
-                ),
-                y: clamp(
-                  pos.y,
-                  stagePos.y,
-                  stagePos.y + (market.height - stall.height) * scale,
-                ),
-              })}
-              onSelect={() => {
-                if (editable) onSelect(stall.id)
-                onStallClick(stall, {
-                  x: stagePos.x + (stall.x + stall.width) * scale + 8,
-                  y: stagePos.y + stall.y * scale,
-                })
-              }}
-              onDragStart={() => setIsDraggingStall(true)}
-              onDragEnd={(x, y) => {
-                setIsDraggingStall(false)
-                onStallDragEnd(stall.id, x, y)
-              }}
-              onTextEdit={(textStall) => {
-                if (editable) setEditingText({ stall: textStall, value: textStall.label ?? '' })
-              }}
-            />
-          ))}
           {editable &&
             corners.map((corner, i) => (
               <Rect
