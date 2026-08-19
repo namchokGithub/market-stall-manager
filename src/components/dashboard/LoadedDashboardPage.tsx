@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ReportDateRangeControl } from "./ReportDateRangeControl";
 import { ReportSummaryCards } from "./ReportSummaryCards";
 import { ReportByStallTable } from "./ReportByStallTable";
@@ -10,6 +12,7 @@ import {
   computeByRenter,
   computeTrend,
 } from "../../data/reportStats";
+import { buildReportCsv, downloadCsv } from "../../data/reportExport";
 import {
   presetRange,
   todayIso,
@@ -63,6 +66,11 @@ export function LoadedDashboardPage({
     [bookings, range],
   );
 
+  const handleExport = () => {
+    const csv = buildReportCsv(summary, byStall, byRenter, range);
+    downloadCsv(`dashboard-report-${range.start}-to-${range.end}.csv`, csv);
+  };
+
   return (
     <div className="flex h-full w-full flex-col overflow-y-auto">
       <ReportDateRangeControl
@@ -71,6 +79,12 @@ export function LoadedDashboardPage({
         onPresetChange={handlePresetChange}
         onCustomRangeChange={handleCustomRangeChange}
       />
+      <div className="flex justify-end px-4 py-2">
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="mr-1 h-4 w-4" />
+          Export CSV
+        </Button>
+      </div>
       <ReportSummaryCards summary={summary} />
       <ReportTrendChart
         points={trend}
