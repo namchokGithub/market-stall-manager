@@ -1,4 +1,4 @@
-import type { Stall } from '../types/stall'
+import { STALL_CATEGORIES, type Stall } from '../types/stall'
 import type { MarketLayout } from '../types/market'
 
 export const DEFAULT_MARKET: MarketLayout = { width: 1200, height: 800, backgroundTint: 50 }
@@ -12,8 +12,6 @@ const GAP_Y = 80
 const ORIGIN_X = 40
 const ORIGIN_Y = 40
 
-const CATEGORIES = ['Clothing', 'Food & Beverage', 'Handicrafts', 'Electronics', 'Fresh Produce', 'Accessories']
-
 function buildRow(prefix: string, rowIndex: number): Stall[] {
   return Array.from({ length: ROW_CAPACITY }, (_, i) => {
     const code = `${prefix}${String(i + 1).padStart(2, '0')}`
@@ -26,7 +24,7 @@ function buildRow(prefix: string, rowIndex: number): Stall[] {
       y: ORIGIN_Y + rowIndex * (STALL_HEIGHT + GAP_Y),
       width: STALL_WIDTH,
       height: STALL_HEIGHT,
-      category: CATEGORIES[globalIndex % CATEGORIES.length],
+      category: STALL_CATEGORIES[globalIndex % STALL_CATEGORIES.length],
     }
   })
 }

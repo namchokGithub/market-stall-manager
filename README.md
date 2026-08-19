@@ -266,7 +266,9 @@ why market resize behaves differently from stall resize (which has real
   Bush), and Annotation (Text, Zone). All non-stall types currently render
   as resizable icon-in-a-box elements. Double-click a Text element to edit
   its label in an HTML input overlay; committing on blur/Enter is undo/redo
-  and Save/Cancel compatible. Zone has a low-opacity area fill and always
+  and Save/Cancel compatible. Select a Stall to choose its optional category
+  from the six market-wide categories in the tools panel; it is shown later in the View Mode detail popup and
+  shares the same undo/redo and Save/Cancel lifecycle. Zone has a low-opacity area fill and always
   displays its label. Delete selected; resize the market boundary
   itself (4 corners, all anchored at the fixed origin, can't shrink below
   the current stalls' bounding box); set a background image by URL

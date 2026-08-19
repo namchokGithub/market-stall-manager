@@ -60,6 +60,7 @@ export function LoadedMarketMapPage({
   const activeBookings = activeBookingsByStallId(initialBookings, todayIso());
   const stalls = withOccupancy(rawStalls, activeBookings);
   const detailStall = detailView ? stalls.find((s) => s.id === detailView.stallId) ?? null : null;
+  const selectedStall = draftState.stalls.find((stall) => stall.id === selectedId);
 
   const handleEnterEdit = () => {
     history.reset(savedState);
@@ -160,6 +161,20 @@ export function LoadedMarketMapPage({
     });
   };
 
+  const handleStallCategoryChange = (id: string, category: string) => {
+    const normalizedCategory = category.trim();
+    history.commit({
+      market: draftState.market,
+      stalls: draftState.stalls.map((stall) => {
+        if (stall.id !== id) return stall;
+        if (normalizedCategory) return { ...stall, category: normalizedCategory };
+
+        const { category: _category, ...stallWithoutCategory } = stall;
+        return stallWithoutCategory;
+      }),
+    });
+  };
+
   const handleSave = async () => {
     const stateToSave = draftState;
     setSaveError(null);
@@ -217,6 +232,7 @@ export function LoadedMarketMapPage({
             canUndo={history.canUndo}
             canRedo={history.canRedo}
             hasSelection={stalls.some((s) => s.id === selectedId)}
+            selectedStall={selectedStall?.kind === "stall" ? selectedStall : undefined}
             backgroundImageUrl={draftState.market.backgroundImageUrl}
             backgroundTint={draftState.market.backgroundTint}
             isSaving={isSaving}
@@ -225,6 +241,7 @@ export function LoadedMarketMapPage({
             onRedo={history.redo}
             onAddElement={handleAddElement}
             onDeleteStall={handleDeleteStall}
+            onStallCategoryChange={handleStallCategoryChange}
             onBackgroundImageChange={handleBackgroundImageChange}
             onBackgroundTintChange={handleBackgroundTintChange}
             onSave={handleSave}

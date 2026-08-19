@@ -14,12 +14,13 @@ import {
   ELEMENT_TYPES,
   type ElementCategory,
 } from "../../data/elementTypes";
-import type { ElementType } from "../../types/stall";
+import { STALL_CATEGORIES, type ElementType, type Stall } from "../../types/stall";
 
 export interface EditToolsPanelProps {
   canUndo: boolean;
   canRedo: boolean;
   hasSelection: boolean;
+  selectedStall?: Stall;
   backgroundImageUrl?: string;
   backgroundTint: number;
   isSaving: boolean;
@@ -28,6 +29,7 @@ export interface EditToolsPanelProps {
   onRedo: () => void;
   onAddElement: (type: ElementType) => void;
   onDeleteStall: () => void;
+  onStallCategoryChange: (id: string, category: string) => void;
   onBackgroundImageChange: (url: string) => void;
   onBackgroundTintChange: (tint: number) => void;
   onSave: () => void;
@@ -38,6 +40,7 @@ export function EditToolsPanel({
   canUndo,
   canRedo,
   hasSelection,
+  selectedStall,
   backgroundImageUrl,
   backgroundTint,
   isSaving,
@@ -46,6 +49,7 @@ export function EditToolsPanel({
   onRedo,
   onAddElement,
   onDeleteStall,
+  onStallCategoryChange,
   onBackgroundImageChange,
   onBackgroundTintChange,
   onSave,
@@ -165,6 +169,30 @@ export function EditToolsPanel({
         <Trash2 className="mr-2 h-4 w-4" />
         Delete
       </Button>
+
+      {selectedStall && (
+        <>
+          <label className="mt-2 px-1 text-xs font-medium text-muted-foreground" htmlFor="stall-category">
+            Stall category (optional)
+          </label>
+          <select
+            id="stall-category"
+            value={selectedStall.category ?? ""}
+            onChange={(event) => onStallCategoryChange(selectedStall.id, event.target.value)}
+            className="rounded-md border border-input px-2 py-1 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          >
+            <option value="">No category</option>
+            {selectedStall.category && !STALL_CATEGORIES.includes(selectedStall.category as (typeof STALL_CATEGORIES)[number]) && (
+              <option value={selectedStall.category}>{selectedStall.category}</option>
+            )}
+            {STALL_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       <div className="my-1 h-px bg-border" />
 

@@ -87,6 +87,14 @@ the way both of the above were verified.
   rely on it, so adding another box-style type starts with one config entry.
   `StallShape.tsx` holds the raw Lucide SVG path data needed by Konva; copy
   it from the installed `lucide-react` icon source rather than guessing.
+- **A Stall's optional category belongs to the map, not a booking.** Choose it
+  only through the selected-Stall select in `EditToolsPanel`; the available
+  market-wide options live in `STALL_CATEGORIES` in `src/types/stall.ts`.
+  The handler in
+  `LoadedMarketMapPage` commits it into `MapState`, so Undo/Redo/Save/Cancel
+  work normally. A blank value removes the optional property instead of
+  persisting an empty string. `StallDetailPopup` displays this field in View
+  Mode.
 - **Text uses an HTML overlay, not Konva text editing.** Double-clicking a
   Text element opens a positioned `<input>` over the canvas in `MapCanvas`.
   Blur or Enter commits `label` via `LoadedMarketMapPage`, keeping it in the

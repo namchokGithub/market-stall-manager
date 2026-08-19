@@ -12,6 +12,15 @@ export type ElementType =
   | 'text'
   | 'zone'
 
+export const STALL_CATEGORIES = [
+  'Food & Beverage',
+  'Fresh Produce',
+  'Clothing',
+  'Accessories',
+  'Handicrafts',
+  'Electronics',
+] as const
+
 export interface Stall {
   id: string
   kind: ElementType
