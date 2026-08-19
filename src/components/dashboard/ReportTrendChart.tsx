@@ -13,7 +13,10 @@ const CHART_HEIGHT = 160;
 // Space reserved below the bars for the bucket label + gap, so bar height
 // is computed against the remaining "bar area" of the chart.
 const LABEL_AREA_HEIGHT = 24;
-const BAR_AREA_HEIGHT = CHART_HEIGHT - LABEL_AREA_HEIGHT;
+// `overflow-x-auto` also clips vertically in browsers. Reserve this much room
+// above the bar area so the in-chart tooltip remains inside the scroll frame.
+const TOOLTIP_AREA_HEIGHT = 48;
+const BAR_AREA_HEIGHT = CHART_HEIGHT - LABEL_AREA_HEIGHT - TOOLTIP_AREA_HEIGHT;
 // Bars never exceed this width, even when there are few buckets and each
 // flex slot is wide — the leftover space in the slot stays air.
 const MAX_BAR_WIDTH = 24;
@@ -61,7 +64,7 @@ export function ReportTrendChart({
         </div>
       </div>
       <div
-        className="flex items-end gap-1 overflow-x-auto"
+        className="flex items-end gap-1 overflow-x-auto pt-12"
         style={{ height: CHART_HEIGHT }}>
         {points.map((point, index) => {
           const value = point[metric];
