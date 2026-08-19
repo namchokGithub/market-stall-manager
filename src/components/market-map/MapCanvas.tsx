@@ -248,11 +248,11 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
   // compositing). So the Stage must not render — and therefore must not
   // draw — until the container has a real measured size.
   if (size.width === 0 || size.height === 0) {
-    return <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-100" />
+    return <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-muted" />
   }
 
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-slate-100">
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-muted">
       <Stage
         ref={stageRef}
         width={size.width}
@@ -408,7 +408,7 @@ export const MapCanvas = forwardRef<MapCanvasHandle, MapCanvasProps>(function Ma
             if (e.key === 'Escape') setEditingText(null)
           }}
           aria-label="Text element content"
-          className="absolute rounded border border-blue-500 bg-white px-2 text-center text-slate-800 outline-none ring-1 ring-blue-300"
+          className="absolute rounded border border-primary bg-card px-2 text-center text-foreground outline-none ring-1 ring-primary"
           style={{
             left: stagePos.x + editingText.stall.x * scale,
             top: stagePos.y + editingText.stall.y * scale,

@@ -53,18 +53,18 @@ export function BookingDetailDialog({
         </DialogHeader>
         <div className="space-y-1.5 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-500">Contact</span>
-            <span className="text-slate-800">{booking.contact ?? "—"}</span>
+            <span className="text-muted-foreground">Contact</span>
+            <span className="text-foreground">{booking.contact ?? "—"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Dates</span>
-            <span className="text-slate-800">
+            <span className="text-muted-foreground">Dates</span>
+            <span className="text-foreground">
               {booking.startDate} – {booking.endDate}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Price</span>
-            <span className="text-slate-800">
+            <span className="text-muted-foreground">Price</span>
+            <span className="text-foreground">
               {typeof booking.totalPrice === "number"
                 ? booking.totalPrice.toLocaleString()
                 : "—"}
@@ -72,12 +72,12 @@ export function BookingDetailDialog({
           </div>
           {booking.notes && (
             <div className="flex justify-between">
-              <span className="text-slate-500">Notes</span>
-              <span className="text-slate-800">{booking.notes}</span>
+              <span className="text-muted-foreground">Notes</span>
+              <span className="text-foreground">{booking.notes}</span>
             </div>
           )}
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Close

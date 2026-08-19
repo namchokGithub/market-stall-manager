@@ -61,8 +61,8 @@ export function EditToolsPanel({
       onBackgroundImageChange(urlInput);
   };
   return (
-    <div className="absolute right-4 top-4 flex w-44 flex-col gap-1 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">
-      <label className="flex items-center gap-1 px-1 text-xs font-medium text-slate-500">
+    <div className="absolute right-4 top-4 flex w-44 flex-col gap-1 rounded-lg border border-border bg-card p-2 shadow-lg">
+      <label className="flex items-center gap-1 px-1 text-xs font-medium text-muted-foreground">
         <Image className="h-3.5 w-3.5" />
         Background URL
       </label>
@@ -75,9 +75,9 @@ export function EditToolsPanel({
         onKeyDown={(e) => {
           if (e.key === "Enter") e.currentTarget.blur();
         }}
-        className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+        className="rounded-md border border-input px-2 py-1 text-xs text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary"
       />
-      <label className="mt-2 flex items-center justify-between px-1 text-xs font-medium text-slate-500">
+      <label className="mt-2 flex items-center justify-between px-1 text-xs font-medium text-muted-foreground">
         <span>Background Tint</span>
         <span>{backgroundTint}%</span>
       </label>
@@ -87,11 +87,11 @@ export function EditToolsPanel({
         max="100"
         value={backgroundTint}
         onChange={(e) => onBackgroundTintChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer accent-blue-600"
+        className="h-2 w-full cursor-pointer accent-primary"
         aria-label="Background Tint"
       />
 
-      <div className="my-1 h-px bg-slate-200" />
+      <div className="my-1 h-px bg-border" />
 
       <div className="flex gap-1">
         <Button
@@ -114,7 +114,7 @@ export function EditToolsPanel({
         </Button>
       </div>
 
-      <div className="my-1 h-px bg-slate-200" />
+      <div className="my-1 h-px bg-border" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -128,7 +128,7 @@ export function EditToolsPanel({
             (category, categoryIndex) => (
               <div key={category}>
                 {categoryIndex > 0 && <DropdownMenuSeparator />}
-                <DropdownMenuLabel className="px-2 py-1 text-xs font-medium text-slate-500">
+                <DropdownMenuLabel className="px-2 py-1 text-xs font-medium text-muted-foreground">
                   {ELEMENT_CATEGORY_LABELS[category]}
                 </DropdownMenuLabel>
                 {(
@@ -166,10 +166,10 @@ export function EditToolsPanel({
         Delete
       </Button>
 
-      <div className="my-1 h-px bg-slate-200" />
+      <div className="my-1 h-px bg-border" />
 
       {saveError && (
-        <p className="px-1 text-xs text-red-600">{saveError}</p>
+        <p className="px-1 text-xs text-destructive">{saveError}</p>
       )}
       <Button
         variant="default"

@@ -9,7 +9,7 @@ interface LoginLocationState {
 }
 
 const INPUT_CLASSNAME =
-  'rounded-md border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400'
+  'rounded-md border border-input px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-1 focus:ring-primary'
 
 const GENERIC_LOGIN_ERROR = 'Invalid email or password.'
 const RESET_CONFIRMATION =
@@ -66,14 +66,14 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-slate-50">
+    <div className="flex h-screen w-screen items-center justify-center bg-muted">
       <form
         onSubmit={handleSubmit}
-        className="flex w-80 flex-col gap-3 rounded-lg border border-slate-200 bg-white p-6 shadow-lg"
+        className="flex w-80 flex-col gap-3 rounded-lg border border-border bg-card p-6 shadow-lg"
       >
-        <h1 className="text-lg font-semibold text-slate-800">Sign in</h1>
+        <h1 className="text-lg font-semibold text-foreground">Sign in</h1>
 
-        <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
           Email
           <input
             type="email"
@@ -85,7 +85,7 @@ export function LoginPage() {
           />
         </label>
 
-        <label className="flex flex-col gap-1 text-xs font-medium text-slate-500">
+        <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
           Password
           <input
             type="password"
@@ -97,7 +97,7 @@ export function LoginPage() {
           />
         </label>
 
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-destructive">{error}</p>}
         {resetMessage && (
           <p className="text-xs text-emerald-600">{resetMessage}</p>
         )}
@@ -110,7 +110,7 @@ export function LoginPage() {
           type="button"
           onClick={handleForgotPassword}
           disabled={isSubmitting}
-          className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+          className="text-xs text-primary hover:underline disabled:opacity-50"
         >
           Forgot password?
         </button>

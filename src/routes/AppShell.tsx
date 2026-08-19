@@ -4,6 +4,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { useAuth } from '@/auth/AuthProvider'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/theme/ThemeToggle'
 
 const NAV_ITEMS = [
   { to: '/market-map', label: 'Market Map', icon: Map },
@@ -18,8 +19,8 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen w-screen">
-      <aside className="flex w-56 shrink-0 flex-col border-r border-slate-200 bg-white">
-        <div className="px-4 py-4 text-lg font-semibold text-slate-800">Market Stall Manager</div>
+      <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card">
+        <div className="px-4 py-4 text-lg font-semibold text-foreground">Market Stall Manager</div>
         <nav className="flex flex-col gap-1 px-2">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -28,8 +29,8 @@ export function AppShell() {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`
               }
             >
@@ -40,10 +41,11 @@ export function AppShell() {
         </nav>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4">
-          <span className="text-sm font-medium text-slate-700">{currentPage?.label ?? ''}</span>
+        <header className="flex h-12 shrink-0 items-center justify-between border-b border-border bg-card px-4">
+          <span className="text-sm font-medium text-foreground">{currentPage?.label ?? ''}</span>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500">{user?.email}</span>
+            <span className="text-xs text-muted-foreground">{user?.email}</span>
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={() => signOut(auth)}>
               Sign out
             </Button>

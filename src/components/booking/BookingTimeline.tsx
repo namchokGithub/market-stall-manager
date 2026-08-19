@@ -52,11 +52,11 @@ export function BookingTimeline({
 
   return (
     <div ref={timelineRef} className="flex h-full w-full min-w-0 flex-col overflow-hidden">
-      <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 sm:px-4">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2 sm:px-4">
         <Button variant="outline" size="sm" onClick={onPrev} aria-label="Previous week">
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <span className="text-sm font-medium text-slate-700">
+        <span className="text-sm font-medium text-foreground">
           {formatDisplayDate(windowStart)} – {formatDisplayDate(windowEnd)}
         </span>
         <Button variant="outline" size="sm" onClick={onNext} aria-label="Next week">
@@ -66,10 +66,10 @@ export function BookingTimeline({
 
       <div className="flex-1 overflow-auto">
         <div style={{ width: contentWidth, minWidth: '100%' }}>
-          <div className="flex border-b border-slate-200 bg-slate-50">
+          <div className="flex border-b border-border bg-muted">
             <div
               style={{ width: ROW_LABEL_WIDTH }}
-              className="sticky left-0 z-20 shrink-0 border-r border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-500"
+              className="sticky left-0 z-20 shrink-0 border-r border-border bg-muted px-3 py-2 text-xs font-semibold text-muted-foreground"
             >
               Stall
             </div>
@@ -77,7 +77,7 @@ export function BookingTimeline({
               <div
                 key={date}
                 style={{ width: cellWidth }}
-                className="shrink-0 border-l border-slate-100 py-2 text-center text-[10px] text-slate-500"
+                className="shrink-0 border-l border-border py-2 text-center text-[10px] text-muted-foreground"
               >
                 {formatDisplayDate(date)}
               </div>
@@ -85,10 +85,10 @@ export function BookingTimeline({
           </div>
 
           {stalls.map((stall) => (
-            <div key={stall.id} className="relative flex border-b border-slate-100" style={{ height: ROW_HEIGHT }}>
+            <div key={stall.id} className="relative flex border-b border-border" style={{ height: ROW_HEIGHT }}>
               <div
                 style={{ width: ROW_LABEL_WIDTH }}
-                className="sticky left-0 z-10 shrink-0 truncate border-r border-slate-100 bg-white px-3 py-2 text-sm text-slate-700"
+                className="sticky left-0 z-10 shrink-0 truncate border-r border-border bg-card px-3 py-2 text-sm text-foreground"
               >
                 {stall.code}
               </div>
@@ -99,7 +99,7 @@ export function BookingTimeline({
                     type="button"
                     onClick={() => onCellClick(stall.id, date)}
                     style={{ position: 'absolute', left: i * cellWidth, width: cellWidth, top: 0, height: ROW_HEIGHT }}
-                    className="border-l border-slate-100 hover:bg-slate-50"
+                    className="border-l border-border hover:bg-muted"
                   />
                 ))}
                 {confirmedBookings

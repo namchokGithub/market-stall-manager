@@ -13,10 +13,10 @@ export function ReportByStallTable({ rows }: ReportByStallTableProps) {
 
   return (
     <div className="p-4">
-      <h2 className="mb-2 text-sm font-semibold text-slate-700">By stall</h2>
+      <h2 className="mb-2 text-sm font-semibold text-foreground">By stall</h2>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+          <tr className="border-b border-border text-left text-xs text-muted-foreground">
             <th className="py-1.5">Stall</th>
             <th
               className="cursor-pointer py-1.5"
@@ -32,10 +32,10 @@ export function ReportByStallTable({ rows }: ReportByStallTableProps) {
         </thead>
         <tbody>
           {sorted.map((row) => (
-            <tr key={row.stallId} className="border-b border-slate-100">
-              <td className="py-1.5 text-slate-800">{row.code}</td>
-              <td className="py-1.5 text-slate-600">{row.bookingCount}</td>
-              <td className="py-1.5 text-slate-600">
+            <tr key={row.stallId} className="border-b border-border">
+              <td className="py-1.5 text-foreground">{row.code}</td>
+              <td className="py-1.5 text-muted-foreground">{row.bookingCount}</td>
+              <td className="py-1.5 text-muted-foreground">
                 {row.revenue.toLocaleString()}
               </td>
             </tr>

@@ -11,6 +11,9 @@ gates every route, and the market layout persists to a single Firestore
 document. See "Firebase setup" below before running this anywhere but a
 fully-configured environment.
 
+The app has a persisted light/dark theme toggle. It follows the OS preference
+only on first load, then stores the user's explicit choice locally.
+
 ## Tech Stack
 
 - React + TypeScript + Vite
@@ -18,6 +21,11 @@ fully-configured environment.
 - Tailwind CSS **v3.4.19** (pinned — `pnpm add tailwindcss` resolves v4 by
   default, which is incompatible with this project's classic
   `postcss.config.js`/`tailwind.config.js`/`@tailwind` setup)
+- Semantic theme tokens — `ThemeProvider` toggles the `dark` class on
+  `<html>`. The `primary`, `primary-foreground`, and `ring` Tailwind entries
+  intentionally use `rgb(var(...) / <alpha-value>)`; retain this form so
+  utilities such as `bg-primary/10` and `hover:bg-primary/90` compile in
+  Tailwind v3.
 - shadcn/ui — CLI pinned to **`3.8.5`**. `shadcn@latest` (v4+) is a
   ground-up rewrite (Base UI primitives, Tailwind-v4-only CSS) that breaks
   this project's build. Always run
@@ -102,10 +110,13 @@ server would).
 ```
 src/
   App.tsx                  # HashRouter + route table (login route + RequireAuth-gated app routes)
-  main.tsx                  # ReactDOM root, wraps <App/> in <AuthProvider>
+  main.tsx                  # ReactDOM root; ThemeProvider wraps AuthProvider + <App/>
   auth/
     AuthProvider.tsx         # onAuthStateChanged subscription; exposes useAuth() -> { user, isAdmin, isLoading }
     RequireAuth.tsx          # route wrapper: redirects to /login when signed out, renders <Outlet/> otherwise
+  theme/
+    ThemeProvider.tsx         # light/dark context; OS default on first load, then localStorage persistence
+    ThemeToggle.tsx           # icon-only header control that switches the current theme
   lib/
     firebase.ts              # initializeApp + exported auth/db singletons (Firestore initialized with
                               #   ignoreUndefinedProperties: true — see "Data model" below)
@@ -114,7 +125,7 @@ src/
                               #   shared by the Booking page and bookingOccupancy.ts; also exports
                               #   presetRange()/DateRangePreset/DateRange for the Dashboard's date-range presets
   routes/
-    AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar (signed-in email, sign-out) + <Outlet/>
+    AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar (email, theme toggle, sign-out) + <Outlet/>
     LoginPage.tsx            # email/password sign-in, forgot-password; no self-registration
     BookingPage.tsx          # loading/error boundary: loads stalls (via marketDoc) + bookings (via
                               #   bookingsRepo), then renders LoadedBookingPage; retry button on load failure
@@ -267,6 +278,20 @@ why market resize behaves differently from stall resize (which has real
   controls. Everything else lives in the floating `EditToolsPanel`
   (Edit Mode only, top-right over the canvas).
 
+## Theme system (built)
+
+- Header toggle switches between light and dark mode; the first visit uses
+  `prefers-color-scheme`, while later visits restore `localStorage['theme']`.
+- The active theme also sets CSS `color-scheme`, so native browser controls
+  such as date pickers use a matching light or dark popup.
+- App chrome uses shadcn semantic tokens (`bg-card`, `text-foreground`,
+  `border-border`, etc.) so the sidebar, forms, dialogs, tables, loading and
+  error states change together.
+- The brand primary/ring colors are blue: `#2563eb` in light mode and
+  `#3b82f6` in dark mode. Konva map drawing colors, occupied badges,
+  booking bars, and the already dark-aware trend chart intentionally keep
+  their own data/visual colors.
+
 ## Known gaps / things a future pass should look at
 
 - `StallDetailPopup` doesn't clamp to the viewport — a stall near the
@@ -311,6 +336,10 @@ brainstorm → design → implementation pass documented here.
   tables, trend chart)
 - `docs/superpowers/plans/2026-08-19-dashboard-report.md` — implementation
   plan for that spec
+- `docs/superpowers/specs/2026-08-19-theme-system-design.md` — Theme system
+  design (persisted light/dark mode and semantic chrome tokens)
+- `docs/superpowers/plans/2026-08-19-theme-system.md` — Theme system
+  implementation plan
 
 Everything else (Market Boundary, resize, bushes, app shell/routing,
 floating tools panel, stall detail popup, background image) was built

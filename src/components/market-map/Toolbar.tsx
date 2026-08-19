@@ -23,20 +23,20 @@ export function Toolbar({
   const isEdit = mode === 'edit'
 
   return (
-    <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
-      <span className="mr-2 font-semibold text-slate-800">Market Map</span>
+    <div className="flex items-center gap-2 border-b border-border bg-card px-4 py-2">
+      <span className="mr-2 font-semibold text-foreground">Market Map</span>
 
       <Button variant="outline" size="sm" disabled={isEdit || !canEdit} onClick={onEnterEdit}>
         {isEdit ? <Eye className="mr-1 h-4 w-4" /> : <Pencil className="mr-1 h-4 w-4" />}
         Edit Mode
       </Button>
 
-      <div className="mx-2 h-6 w-px bg-slate-200" />
+      <div className="mx-2 h-6 w-px bg-border" />
 
       <Button variant="ghost" size="icon" onClick={onZoomOut} aria-label="Zoom out">
         <ZoomOut className="h-4 w-4" />
       </Button>
-      <span className="w-12 text-center text-sm text-slate-600">{zoomPercent}%</span>
+      <span className="w-12 text-center text-sm text-muted-foreground">{zoomPercent}%</span>
       <Button variant="ghost" size="icon" onClick={onZoomIn} aria-label="Zoom in">
         <ZoomIn className="h-4 w-4" />
       </Button>

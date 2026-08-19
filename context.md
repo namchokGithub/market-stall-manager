@@ -38,6 +38,14 @@ reading the error, not by guessing:
   must use `pnpm dlx shadcn@3.8.5 add <component>`.
    `DropdownMenu` is now installed and uses Radix's
    `@radix-ui/react-dropdown-menu`, matching this same Tailwind-v3 setup.
+3. **Keep the alpha-aware primary token configuration.** In
+   `tailwind.config.js`, `primary`, `primary.foreground`, and `ring` use
+   `rgb(var(...) / <alpha-value>)`, while `src/index.css` supplies RGB
+   channels (not a complete `#hex` or `oklch(...)` colour) for those three
+   variables. This is load-bearing in Tailwind v3: it makes
+   `bg-primary/10` and `hover:bg-primary/90` generate valid CSS. Do not
+   simplify those entries to plain `var(--primary)` unless all slash-opacity
+   uses are removed or the configuration is redesigned.
 
 If you ever need to add a new dependency whose default version might have
 moved on since this was written, don't assume — check the changelog or
@@ -98,9 +106,27 @@ the way both of the above were verified.
   before clamping, and Konva converts the clamped result back to the
   node's local coordinates for you. Get this backwards and clamping will
   silently do the wrong thing at any zoom level other than 100%.
+- **Theme is global and client-persisted.** `ThemeProvider` wraps the app
+  outermost in `main.tsx`, so both authenticated routes and `/login` receive
+  the theme. It restores only `'light'` or `'dark'` from `localStorage['theme']`;
+  otherwise it adopts `prefers-color-scheme` on first load. Its effect owns
+  the `dark` class on `<html>`. Keep new generic UI chrome on semantic
+  Tailwind classes (`bg-card`, `text-foreground`, `border-border`,
+  `text-muted-foreground`, etc.) so it follows the theme. Status/data
+  colors and Konva shape-prop colors remain intentionally independent.
+  `src/index.css` also sets `color-scheme: light` on `:root` and
+  `color-scheme: dark` on `.dark`; this is what makes native controls such
+  as `<input type="date">` render a matching calendar popup.
 
 ## What's genuinely unfinished
 
+- **Theme system now exists** — see
+  `docs/superpowers/specs/2026-08-19-theme-system-design.md` and
+  `docs/superpowers/plans/2026-08-19-theme-system.md`. It changes the
+  primary/ring brand color, adds a persisted two-state light/dark toggle,
+  and converts app chrome to semantic tokens. Map canvas drawing colors,
+  booking bars/occupied badges, and the trend chart's already tuned dark
+  variants are deliberately out of scope for that pass.
 - **Booking now exists** — full design and implementation pass, see
   `docs/superpowers/specs/2026-08-18-booking-design.md` (spec) and
   `docs/superpowers/plans/2026-08-18-booking.md` (plan). `Stall.status`/

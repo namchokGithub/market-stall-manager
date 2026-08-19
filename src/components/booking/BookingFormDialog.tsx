@@ -105,7 +105,7 @@ export function BookingFormDialog({
         <form onSubmit={handleSubmit} noValidate className="space-y-3">
           <div className="space-y-1">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-foreground"
               htmlFor="booking-stall">
               Stall
             </label>
@@ -113,7 +113,7 @@ export function BookingFormDialog({
               id="booking-stall"
               value={stallId}
               onChange={(e) => setStallId(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm">
+              className="w-full rounded-md border border-input px-2 py-1.5 text-sm">
               {stalls.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.code}
@@ -124,7 +124,7 @@ export function BookingFormDialog({
 
           <div className="space-y-1">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-foreground"
               htmlFor="booking-renter">
               Renter name
             </label>
@@ -133,13 +133,13 @@ export function BookingFormDialog({
               required
               value={renterName}
               onChange={(e) => setRenterName(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-input px-2 py-1.5 text-sm"
             />
           </div>
 
           <div className="space-y-1">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-foreground"
               htmlFor="booking-contact">
               Contact (optional)
             </label>
@@ -147,13 +147,13 @@ export function BookingFormDialog({
               id="booking-contact"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-input px-2 py-1.5 text-sm"
             />
           </div>
 
           <div className="space-y-1">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-foreground"
               htmlFor="booking-price">
               Total price
             </label>
@@ -165,14 +165,14 @@ export function BookingFormDialog({
               required
               value={totalPrice}
               onChange={(e) => setTotalPrice(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-input px-2 py-1.5 text-sm"
             />
           </div>
 
           <div className="flex gap-3">
             <div className="flex-1 space-y-1">
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-foreground"
                 htmlFor="booking-start">
                 Start date
               </label>
@@ -182,12 +182,12 @@ export function BookingFormDialog({
                 required
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="w-full rounded-md border border-input px-2 py-1.5 text-sm"
               />
             </div>
             <div className="flex-1 space-y-1">
               <label
-                className="text-sm font-medium text-slate-700"
+                className="text-sm font-medium text-foreground"
                 htmlFor="booking-end">
                 End date
               </label>
@@ -197,14 +197,14 @@ export function BookingFormDialog({
                 required
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+                className="w-full rounded-md border border-input px-2 py-1.5 text-sm"
               />
             </div>
           </div>
 
           <div className="space-y-1">
             <label
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-foreground"
               htmlFor="booking-notes">
               Notes (optional)
             </label>
@@ -212,11 +212,11 @@ export function BookingFormDialog({
               id="booking-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+              className="w-full rounded-md border border-input px-2 py-1.5 text-sm"
             />
           </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

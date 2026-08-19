@@ -13,10 +13,10 @@ export function ReportByRenterTable({ rows }: ReportByRenterTableProps) {
 
   return (
     <div className="p-4">
-      <h2 className="mb-2 text-sm font-semibold text-slate-700">By renter</h2>
+      <h2 className="mb-2 text-sm font-semibold text-foreground">By renter</h2>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-left text-xs text-slate-500">
+          <tr className="border-b border-border text-left text-xs text-muted-foreground">
             <th className="py-1.5">Renter</th>
             <th
               className="cursor-pointer py-1.5"
@@ -32,10 +32,10 @@ export function ReportByRenterTable({ rows }: ReportByRenterTableProps) {
         </thead>
         <tbody>
           {sorted.map((row) => (
-            <tr key={row.renterName} className="border-b border-slate-100">
-              <td className="py-1.5 text-slate-800">{row.renterName}</td>
-              <td className="py-1.5 text-slate-600">{row.bookingCount}</td>
-              <td className="py-1.5 text-slate-600">
+            <tr key={row.renterName} className="border-b border-border">
+              <td className="py-1.5 text-foreground">{row.renterName}</td>
+              <td className="py-1.5 text-muted-foreground">{row.bookingCount}</td>
+              <td className="py-1.5 text-muted-foreground">
                 {row.revenue.toLocaleString()}
               </td>
             </tr>

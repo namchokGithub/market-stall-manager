@@ -71,7 +71,7 @@ export function ReportDateRangeControl({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b border-slate-200 px-4 py-3">
+    <div className="flex flex-wrap items-center gap-3 border-b border-border px-4 py-3">
       <div className="flex gap-1">
         {PRESETS.map((p) => (
           <Button
@@ -91,21 +91,21 @@ export function ReportDateRangeControl({
           onChange={(e) =>
             handleDraftChange({ start: e.target.value, end: draft.end })
           }
-          className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+          className="rounded-md border border-input px-2 py-1 text-sm"
           aria-label="Custom range start date"
         />
-        <span className="text-slate-400">–</span>
+        <span className="text-muted-foreground">–</span>
         <input
           type="date"
           value={draft.end}
           onChange={(e) =>
             handleDraftChange({ start: draft.start, end: e.target.value })
           }
-          className="rounded-md border border-slate-300 px-2 py-1 text-sm"
+          className="rounded-md border border-input px-2 py-1 text-sm"
           aria-label="Custom range end date"
         />
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

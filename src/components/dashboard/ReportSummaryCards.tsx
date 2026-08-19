@@ -32,9 +32,9 @@ export function ReportSummaryCards({ summary }: ReportSummaryCardsProps) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="text-xs font-medium text-slate-500">{card.label}</div>
-          <div className="mt-1 text-2xl font-semibold text-slate-800">
+          className="rounded-lg border border-border bg-card p-4">
+          <div className="text-xs font-medium text-muted-foreground">{card.label}</div>
+          <div className="mt-1 text-2xl font-semibold text-foreground">
             {card.value}
           </div>
         </div>

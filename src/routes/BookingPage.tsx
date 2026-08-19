@@ -36,7 +36,7 @@ export function BookingPage() {
   if (isLoadingInitial) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <p className="text-sm text-slate-500">Loading bookings…</p>
+        <p className="text-sm text-muted-foreground">Loading bookings…</p>
       </div>
     )
   }
@@ -44,7 +44,7 @@ export function BookingPage() {
   if (loadError) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-        <p className="text-sm text-red-600">{loadError}</p>
+        <p className="text-sm text-destructive">{loadError}</p>
         <Button variant="outline" onClick={() => load()}>
           Retry
         </Button>

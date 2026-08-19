@@ -20,9 +20,9 @@ export default {
   				DEFAULT: 'var(--popover)',
   				foreground: 'var(--popover-foreground)'
   			},
-  			primary: {
-  				DEFAULT: 'var(--primary)',
-  				foreground: 'var(--primary-foreground)'
+			primary: {
+				DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+				foreground: 'rgb(var(--primary-foreground) / <alpha-value>)'
   			},
   			secondary: {
   				DEFAULT: 'var(--secondary)',
@@ -39,7 +39,7 @@ export default {
   			destructive: 'var(--destructive)',
   			border: 'var(--border)',
   			input: 'var(--input)',
-  			ring: 'var(--ring)',
+			ring: 'rgb(var(--ring) / <alpha-value>)',
   			chart: {
   				'1': 'var(--chart-1)',
   				'2': 'var(--chart-2)',
