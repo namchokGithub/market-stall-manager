@@ -8,6 +8,7 @@ export type NewBookingInput = {
   stallId: string
   renterName: string
   contact?: string
+  totalPrice: number
   startDate: string
   endDate: string
   notes?: string
