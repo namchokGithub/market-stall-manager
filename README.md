@@ -3,12 +3,13 @@
 Admin app for managing a market's physical layout. The Market Map page is
 fully built (view/edit a market floor plan with stalls and general map
 elements); Booking is also built (timeline view, create/cancel bookings,
-stall occupancy derived from active bookings); Dashboard remains a routed
-placeholder waiting on its own design work. Persistence and auth are real:
-Firebase Authentication (email/password, no self-registration) gates every
-route, and the market layout persists to a single Firestore document. See
-"Firebase setup" below before running this anywhere but a fully-configured
-environment.
+stall occupancy derived from active bookings); Dashboard is also built (a
+date-range report over booking data: KPI summary cards, by-stall/by-renter
+breakdown tables, and a revenue/bookings trend chart). Persistence and auth
+are real: Firebase Authentication (email/password, no self-registration)
+gates every route, and the market layout persists to a single Firestore
+document. See "Firebase setup" below before running this anywhere but a
+fully-configured environment.
 
 ## Tech Stack
 
@@ -110,13 +111,16 @@ src/
                               #   ignoreUndefinedProperties: true — see "Data model" below)
     utils.ts                 # shadcn's cn() helper
     dates.ts                 # todayIso/addDays/diffDays/formatDisplayDate — ISO yyyy-mm-dd date helpers
-                              #   shared by the Booking page and bookingOccupancy.ts
+                              #   shared by the Booking page and bookingOccupancy.ts; also exports
+                              #   presetRange()/DateRangePreset/DateRange for the Dashboard's date-range presets
   routes/
     AppShell.tsx            # sidebar (Market Map/Booking/Dashboard) + top bar (signed-in email, sign-out) + <Outlet/>
     LoginPage.tsx            # email/password sign-in, forgot-password; no self-registration
     BookingPage.tsx          # loading/error boundary: loads stalls (via marketDoc) + bookings (via
                               #   bookingsRepo), then renders LoadedBookingPage; retry button on load failure
-    DashboardPage.tsx        # placeholder — not designed yet
+    DashboardPage.tsx        # loading/error boundary: loads stalls (via marketDoc, filtered to
+                              #   kind === 'stall') + bookings (via bookingsRepo), then renders
+                              #   LoadedDashboardPage; retry button on load failure
   components/market-map/
     MarketMapPage.tsx        # loading/error boundary only: loads MapState via marketDoc, then renders
                               #   LoadedMarketMapPage; retry button on load failure
@@ -138,7 +142,20 @@ src/
                               #   each Booking as a bar; clicking an empty cell opens the create dialog,
                               #   clicking a bar opens the detail/cancel dialog
     BookingFormDialog.tsx     # create-booking dialog: stall + date-range picker, calls createBooking
-    BookingDetailDialog.tsx   # read-only booking detail + Cancel button, calls cancelBooking
+    BookingDetailDialog.tsx   # booking detail (contact/dates/price/notes) + Cancel button, calls cancelBooking
+  components/dashboard/
+    LoadedDashboardPage.tsx   # owns date-range/preset state + the Revenue/Bookings trend-metric toggle;
+                              #   re-derives all reportStats (memoized) from the already-loaded
+                              #   bookings/stalls whenever the range changes — no refetch
+    ReportDateRangeControl.tsx # preset buttons (Today/This Week/This Month/This Year) + custom
+                              #   start/end date inputs; validates the custom range (non-empty,
+                              #   well-formed, end >= start, capped at ~5 years) before committing it,
+                              #   showing an inline error and leaving the last good range in effect otherwise
+    ReportSummaryCards.tsx    # KPI tiles: total bookings, total revenue, occupancy rate, cancellation rate
+    ReportByStallTable.tsx    # one row per stall: booking count + revenue, sortable by either column
+    ReportByRenterTable.tsx   # one row per distinct renter: booking count + revenue, sortable by either column
+    ReportTrendChart.tsx      # hand-built bar chart of revenue or count per bucket (day buckets for
+                              #   ranges <=31 days, month buckets for longer ranges)
   state/useMapHistory.ts      # generic undo/redo hook, snapshots a whole T (here: MapState)
   data/
     elementTypes.ts            # type/category/icon/color/default-size source of truth
@@ -151,6 +168,9 @@ src/
     bookingOccupancy.ts          # activeBookingsByStallId/withOccupancy — derives each Stall's
                                  #   status/renterName/contact from today's active bookings, producing
                                  #   the render-only DisplayStall[] the Market Map consumes
+    reportStats.ts               # computeSummary/computeByStall/computeByRenter/computeTrend — pure,
+                                 #   client-side aggregation over already-loaded Booking[]/Stall[] for a
+                                 #   given date range; no Firestore access, no stored/precomputed stats
   types/
     stall.ts                  # Stall data used for every placed map element
     market.ts                 # MarketLayout
@@ -267,8 +287,9 @@ why market resize behaves differently from stall resize (which has real
 
 ## What's next (each gets its own brainstorm → design → implementation)
 
-- **Dashboard page** (`src/routes/DashboardPage.tsx`) — no requirements
-  yet: what metrics/content it should show.
+Nothing currently planned — Market Map, Booking, and Dashboard (this app's
+three nav pages) are all built. Future features would go through the same
+brainstorm → design → implementation pass documented here.
 
 ## Design docs
 
@@ -285,6 +306,11 @@ why market resize behaves differently from stall resize (which has real
   spec (timeline view, create/cancel, stall occupancy)
 - `docs/superpowers/plans/2026-08-18-booking.md` — implementation plan for
   that spec
+- `docs/superpowers/specs/2026-08-19-dashboard-report-design.md` — Dashboard
+  Report feature spec (date-range presets, KPI summary, by-stall/by-renter
+  tables, trend chart)
+- `docs/superpowers/plans/2026-08-19-dashboard-report.md` — implementation
+  plan for that spec
 
 Everything else (Market Boundary, resize, bushes, app shell/routing,
 floating tools panel, stall detail popup, background image) was built

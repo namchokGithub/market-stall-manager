@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ReportDateRangeControl } from "./ReportDateRangeControl";
 import { ReportSummaryCards } from "./ReportSummaryCards";
 import { ReportByStallTable } from "./ReportByStallTable";
@@ -28,7 +28,7 @@ export function LoadedDashboardPage({
   stalls,
   bookings,
 }: LoadedDashboardPageProps) {
-  const [preset, setPreset] = useState<DateRangePreset>("thisMonth");
+  const [preset, setPreset] = useState<DateRangePreset | null>("thisMonth");
   const [range, setRange] = useState<DateRange>(() =>
     presetRange("thisMonth", todayIso()),
   );
@@ -41,10 +41,27 @@ export function LoadedDashboardPage({
     setRange(presetRange(nextPreset, todayIso()));
   };
 
-  const summary = computeSummary(bookings, stalls, range);
-  const byStall = computeByStall(bookings, stalls, range);
-  const byRenter = computeByRenter(bookings, range);
-  const trend = computeTrend(bookings, range);
+  const handleCustomRangeChange = (nextRange: DateRange) => {
+    setPreset(null);
+    setRange(nextRange);
+  };
+
+  const summary = useMemo(
+    () => computeSummary(bookings, stalls, range),
+    [bookings, stalls, range],
+  );
+  const byStall = useMemo(
+    () => computeByStall(bookings, stalls, range),
+    [bookings, stalls, range],
+  );
+  const byRenter = useMemo(
+    () => computeByRenter(bookings, range),
+    [bookings, range],
+  );
+  const trend = useMemo(
+    () => computeTrend(bookings, range),
+    [bookings, range],
+  );
 
   return (
     <div className="flex h-full w-full flex-col overflow-y-auto">
@@ -52,7 +69,7 @@ export function LoadedDashboardPage({
         preset={preset}
         range={range}
         onPresetChange={handlePresetChange}
-        onCustomRangeChange={setRange}
+        onCustomRangeChange={handleCustomRangeChange}
       />
       <ReportSummaryCards summary={summary} />
       <ReportTrendChart

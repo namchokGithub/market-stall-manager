@@ -108,10 +108,17 @@ the way both of the above were verified.
   they're derived per-render from `bookings` via
   `src/data/bookingOccupancy.ts`'s `withOccupancy`, and carried on the
   render-only `DisplayStall` type.
-- **Dashboard page is still a routed placeholder with zero requirements
-  gathered.** No metrics or content were ever specified. Should go through
-  its own brainstorm → design → implementation pass, not be inferred from
-  the Market Map's or Booking's patterns.
+- **Dashboard now exists** — full design and implementation pass, see
+  `docs/superpowers/specs/2026-08-19-dashboard-report-design.md` (spec) and
+  `docs/superpowers/plans/2026-08-19-dashboard-report.md` (plan). It's a
+  read-only report computed client-side (`src/data/reportStats.ts`) over the
+  already-loaded `Booking[]`/`Stall[]` arrays for a selected date range
+  (preset buttons or a validated custom start/end override): KPI summary
+  (bookings, revenue, occupancy rate, cancellation rate), by-stall and
+  by-renter breakdown tables, and a revenue/bookings trend chart bucketed by
+  day or month depending on the range length. No new Firestore collection
+  and no stored/precomputed stats document — everything recomputes from the
+  one-shot `listBookings()`/`loadMarketState()` fetch already used elsewhere.
 - **Polygon-shaped market boundaries** were asked about and explicitly
   deferred (see the design conversation) — it's a real, bigger redesign
   (breaking `MarketLayout` to `points: {x,y}[]`, point-in-polygon

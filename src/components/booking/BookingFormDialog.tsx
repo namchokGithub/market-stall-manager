@@ -40,6 +40,11 @@ export function BookingFormDialog({
     e.preventDefault();
     setError(null);
 
+    if (!startDate || !endDate) {
+      setError("Start and end dates are required.");
+      return;
+    }
+
     if (endDate < startDate) {
       setError("End date must be on or after the start date.");
       return;

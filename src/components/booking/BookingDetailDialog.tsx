@@ -55,6 +55,14 @@ export function BookingDetailDialog({ booking, stallCode, onClose, onCancelled }
               {booking.startDate} – {booking.endDate}
             </span>
           </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Price</span>
+            <span className="text-slate-800">
+              {typeof booking.totalPrice === 'number'
+                ? booking.totalPrice.toLocaleString()
+                : '—'}
+            </span>
+          </div>
           {booking.notes && (
             <div className="flex justify-between">
               <span className="text-slate-500">Notes</span>

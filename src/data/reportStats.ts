@@ -11,6 +11,13 @@ function inRange(dateIso: string, range: DateRange): boolean {
   return dateIso >= range.start && dateIso <= range.end;
 }
 
+function revenueOf(booking: Booking): number {
+  return typeof booking.totalPrice === "number" &&
+    Number.isFinite(booking.totalPrice)
+    ? booking.totalPrice
+    : 0;
+}
+
 export interface ReportSummary {
   totalBookings: number;
   totalRevenue: number;
@@ -29,7 +36,7 @@ export function computeSummary(
 
   const totalBookings = confirmed.length;
   const totalRevenue = confirmed.reduce(
-    (sum, b) => sum + (b.totalPrice ?? 0),
+    (sum, b) => sum + revenueOf(b),
     0,
   );
   const cancellationRate =
@@ -82,7 +89,7 @@ export function computeByStall(
         stallId: stall.id,
         code: stall.code,
         bookingCount: stallBookings.length,
-        revenue: stallBookings.reduce((sum, b) => sum + (b.totalPrice ?? 0), 0),
+        revenue: stallBookings.reduce((sum, b) => sum + revenueOf(b), 0),
       };
     });
 }
@@ -105,12 +112,12 @@ export function computeByRenter(
     const existing = byRenter.get(b.renterName);
     if (existing) {
       existing.bookingCount += 1;
-      existing.revenue += b.totalPrice ?? 0;
+      existing.revenue += revenueOf(b);
     } else {
       byRenter.set(b.renterName, {
         renterName: b.renterName,
         bookingCount: 1,
-        revenue: b.totalPrice ?? 0,
+        revenue: revenueOf(b),
       });
     }
   }
@@ -150,7 +157,7 @@ export function computeTrend(
       const bucket = buckets.get(b.startDate.slice(0, 7));
       if (bucket) {
         bucket.count += 1;
-        bucket.revenue += b.totalPrice ?? 0;
+        bucket.revenue += revenueOf(b);
       }
     }
   } else {
@@ -167,7 +174,7 @@ export function computeTrend(
       const bucket = buckets.get(b.startDate);
       if (bucket) {
         bucket.count += 1;
-        bucket.revenue += b.totalPrice ?? 0;
+        bucket.revenue += revenueOf(b);
       }
     }
   }
