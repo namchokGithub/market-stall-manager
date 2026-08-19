@@ -89,7 +89,7 @@ export function BookingFormDialog({
             Reserve a stall for a date range.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} noValidate className="space-y-3">
           <div className="space-y-1">
             <label
               className="text-sm font-medium text-slate-700"
